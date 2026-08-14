@@ -53,11 +53,15 @@ python3 skills/yi-reading/scripts/reading.py
 
 ### 第四步 · 發卦象圖
 
-從 `assets/hexagrams/` 取圖，文件名即 `NN-卦名.png`：
+從 `assets/hexagrams/` 取圖，文件名即 `NN-卦名.png`。走飛書時：
 
 ```bash
-lark-cli im +messages-send --as bot --chat-id <id> --file skills/yi-reading/assets/hexagrams/03-屯.png
+cd <skill 目錄> && lark-cli im +messages-send --as bot --chat-id <id> \
+  --image ./assets/hexagrams/03-屯.png
 ```
+
+兩個坑：發圖用 `--image` 不是 `--file`；路徑必須是**當前目錄下的相對路徑**，
+給絕對路徑會被拒。先 `cd` 到 skill 目錄再發。
 
 有動爻就同時發本卦與之卦兩張。**動爻不在圖上**（靜態圖表達不了 2⁶ 種組合），
 用文字說明：「初九、六四為動爻」。
