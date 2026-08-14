@@ -27,10 +27,10 @@ skills/
 可復現的偽隨機與共時性互斥——這是這個項目的立足點，不是風格偏好。
 `tests/test_yi.py::TestRandomSource` 有靜態檢查。
 
-**2. 不得把自撰文字冒充注家原文。** 這條有機器判據，不靠自覺：
-`verify_quote.py` 要求引文是庫中原文的逐字子串；`data/commentary/coverage.json`
-記錄哪些卦真有原文。`covered` 裏的必須真有文件，`missing` 裏的必須真沒有
-——測試兩頭都查。
+**2. 引誰的話必須真是誰的話。** 這條有機器判據，不靠自覺：
+`verify_quote.py` 要求引文是庫中原文的逐字子串（`--any` 還會報出處）。
+三家注各 64 卦，測試逐卦查文件在不在、卷次對不對、有沒有模板殘留。
+**轉述不署名**——要麼真引，要麼別掛在注家名下。
 
 **3. 卦畫數據不手抄。** 六爻與卦名的對應無法肉眼校對。
 要改就改 `build_table.py`（從八卦符號推導＋結構不變量自校驗），
@@ -46,7 +46,7 @@ skill 裝到用戶機器上就是壞的。
 python3 -m unittest discover -s tests
 ```
 
-46 個測試，只用標準庫，跑完不到一秒。**斷卦邏輯改了必須全綠再提交**
+48 個測試，只用標準庫，跑完不到一秒。**斷卦邏輯改了必須全綠再提交**
 ——考變占選錯句子不會報錯，輸出照樣通順，沒有任何外部信號。
 
 改數據或圖：
@@ -54,12 +54,16 @@ python3 -m unittest discover -s tests
 ```bash
 python3 skills/yi-reading/scripts/build_table.py            # → data/_table.json
 python3 skills/yi-reading/scripts/fetch_texts.py            # → data/hexagrams.json
-python3 skills/yi-reading/scripts/fetch_texts.py --dongpo   # → data/commentary/
+python3 skills/yi-reading/scripts/fetch_commentary.py       # → data/commentary/（三家）
 python3 skills/yi-reading/scripts/render_hexagrams.py       # → assets/（需 rsvg-convert）
 ```
 
 抓取一律走 MediaWiki API，不解析 HTML。ctext.org 對自動訪問彈驗證碼，
 不是可用來源，也不要去繞過。
+
+**判定「某個源不存在」之前，先用 `list=allpages&apprefix=` 把命名空間枚舉一遍。**
+這個坑踩過兩次：先是只驗了 `東坡易傳/01` 就斷言 64 卦齊全，
+後是只看了那套子頁就斷言只有 35 卦——兩次都是拿樣本當全集。
 
 ## 新增 skill
 

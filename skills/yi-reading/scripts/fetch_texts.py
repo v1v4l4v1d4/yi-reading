@@ -1,8 +1,9 @@
 """Build-time: fetch the classical texts and assemble data/hexagrams.json.
 
-Sources, both via the MediaWiki API (never by scraping rendered HTML):
+Source, via the MediaWiki API (never by scraping rendered HTML):
   - 經文  https://zh.wikisource.org/wiki/周易/<卦名>   卦辭、六爻辭、彖傳、大象、六小象
-  - 蘇注  https://zh.wikisource.org/wiki/東坡易傳/<NN>  per-hexagram, punctuated
+
+The three commentaries live in fetch_commentary.py — this file is 經傳 only.
 
 The hexagram table itself comes from build_table.py, which derives the six-line
 patterns from Unicode trigram symbols rather than transcribing them. This script
@@ -11,8 +12,8 @@ Wikisource 經文 pages carry, and asserts the two agree. Two independent source
 have to say the same thing before anything is written.
 
 Usage:
-    uv run python scripts/build_table.py enkw.json data/_table.json
-    uv run python scripts/fetch_texts.py
+    python3 scripts/build_table.py       # → data/_table.json
+    python3 scripts/fetch_texts.py       # → data/hexagrams.json
 """
 
 import json
@@ -59,40 +60,6 @@ def clean(s: str) -> str:
     s = re.sub(r"'''?|\[\[[^|\]]*\|([^\]]*)\]\]", r"\1", s)
     s = re.sub(r"\[\[([^\]]*)\]\]", r"\1", s)
     return s.strip()
-
-
-# Head-of-page furniture on the 東坡易傳 subpages. The pages are not uniform:
-# some open with a {{header}} template (whose parameter lines survive a naive
-# line filter), some with the bare 「坎上／坎下」 trigram labels, one with a lone
-# 「經」. All of it is layout, not text — but only at the head, so we strip from
-# the front and stop at the first substantive line rather than filtering globally.
-# 幹 appears where 乾 was mangled by a variant-conversion pass upstream.
-FURNITURE = re.compile(r"^(?:\||\}\}|\{\{|[乾兌離震巽坎艮坤幹][上下]|經|傳|$)")
-
-
-# 只出現於簡化字的常用字，用來標出哪些頁面是簡體轉錄。
-# 不做繁簡轉換：轉換會改動原文，而這裏的全部價值就在於逐字可核。
-# 注意 无 不在此列：它是《周易》經文的本字，繁體本同樣用它。
-SIMPLIFIED_ONLY = "贞观见长阳阴顺养说龙时实语饮虽义则复归为万"
-
-
-def page_quirks(text: str) -> list[str]:
-    """記錄各頁轉錄體例的差異——它們是來源的事實，不是這裏的 bug。"""
-    out = []
-    if sum(text.count(c) for c in SIMPLIFIED_ONLY) > 8:
-        out.append("簡體轉錄")
-    if any(ln in ("經", "傳") for ln in text.splitlines()):
-        out.append("以「經」「傳」行分隔經文與蘇注")
-    if "“" in text:
-        out.append("引號作 “ ”")
-    return out
-
-
-def strip_page_furniture(lines) -> list[str]:
-    out = [ln for ln in lines if ln]
-    while out and FURNITURE.match(out[0]):
-        out.pop(0)
-    return [ln for ln in out if not ln.startswith("{{")]
 
 
 CN_NUM = {c: i for i, c in enumerate("〇一二三四五六七八九")}
@@ -267,97 +234,10 @@ def main() -> None:
     print(f"\nwrote {DATA / 'hexagrams.json'} ({len(out)} hexagrams)", file=sys.stderr)
 
 
-def fetch_dongpo() -> None:
-    """蘇軾《東坡易傳》 from Wikisource, per hexagram.
-
-    Coverage is partial and that is a fact about the source, not a bug here: the
-    table of contents links all 64, but only 01–35 have actually been
-    transcribed — the rest are red links. (ctext.org has a 摛藻堂四庫全書薈要
-    text edition, but it serves a CAPTCHA to automated access, so it is not a
-    usable source and we do not try to work around it.) We record exactly which
-    hexagrams have 原文 so the skill can tell the user the truth at run time
-    instead of quietly substituting its own prose for 蘇軾's.
-    """
-    table = json.load(open(DATA / "_table.json"))
-    outdir = DATA / "commentary" / "dongpo"
-    outdir.mkdir(parents=True, exist_ok=True)
-    failures, covered, quirks = [], [], {}
-
-    url = f"{API}?" + urllib.parse.urlencode(
-        {"action": "query", "list": "allpages", "apprefix": "東坡易傳/",
-         "aplimit": "500", "format": "json"}
-    )
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=40) as r:
-        existing = {p["title"] for p in json.load(r)["query"]["allpages"]}
-    print(f"{len(existing)} 東坡易傳 subpages exist upstream", file=sys.stderr)
-
-    for row in table:
-        no = row["name"] and row["no"]
-        title = f"東坡易傳/{no:02d}"
-        if title not in existing:
-            continue  # not transcribed upstream; recorded as uncovered below
-        try:
-            wt = wikitext(title)
-        except LookupError as exc:
-            failures.append(f"{no:02d} {row['name']}: {exc}")
-            continue
-        text = "\n".join(strip_page_furniture(clean(l) for l in wt.splitlines()))
-        if len(text) < 200:
-            failures.append(f"{no:02d} {row['name']}: suspiciously short ({len(text)} chars)")
-            continue
-        (outdir / f"{no:02d}.json").write_text(
-            json.dumps(
-                {"no": no, "name": row["name"], "source": f"東坡易傳/{no:02d}",
-                 "source_url": f"https://zh.wikisource.org/wiki/東坡易傳/{no:02d}",
-                 "text": text},
-                ensure_ascii=False, indent=2,
-            ),
-            encoding="utf-8",
-        )
-        covered.append(no)
-        quirks[no] = page_quirks(text)
-        print(f"  {no:02d} {row['name']} ✓ ({len(text)} chars)", file=sys.stderr)
-        time.sleep(0.4)
-
-    if failures:
-        print("\nFAILED:", file=sys.stderr)
-        for f in failures:
-            print("  " + f, file=sys.stderr)
-    # Pages that exist upstream must parse. Pages that do not exist upstream are
-    # recorded as uncovered — that is the honest outcome, not a failure.
-    assert not failures, f"{len(failures)} existing 東坡易傳 pages failed to parse"
-
-    missing = [r["no"] for r in table if r["no"] not in covered]
-    (DATA / "commentary" / "coverage.json").write_text(
-        json.dumps(
-            {
-                "dongpo": {
-                    "source": "https://zh.wikisource.org/wiki/東坡易傳",
-                    "covered": covered,
-                    "missing": missing,
-                    "note": "維基文庫僅轉錄至第 35 卦；其餘為紅鏈。缺者不得以自撰文字冒充原文。",
-                    "quirks": {str(k): v for k, v in sorted(quirks.items()) if v},
-                    "quirks_note": (
-                        "各頁轉錄體例不一（簡繁、引號、經傳分行）。一律照錄，"
-                        "不做繁簡轉換——轉換會改動原文，而引用的全部價值在於逐字可核。"
-                    ),
-                }
-            },
-            ensure_ascii=False, indent=2,
-        ),
-        encoding="utf-8",
-    )
-    print(
-        f"\nwrote {outdir} — 原文 covers {len(covered)}/64 "
-        f"(missing {min(missing)}–{max(missing)})" if missing else
-        f"\nwrote {outdir} — 原文 covers 64/64",
-        file=sys.stderr,
-    )
-
-
 if __name__ == "__main__":
     if "--dongpo" in sys.argv:
-        fetch_dongpo()
-    else:
-        main()
+        sys.exit(
+            "註解已改由 fetch_commentary.py 抓取——三家、六十四卦全。\n"
+            "這裏的 --dongpo 只會抓到 1–35 卦並覆蓋掉完整數據，故已移除。"
+        )
+    main()

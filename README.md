@@ -19,7 +19,7 @@ npx skills add v1v4l4v1d4/yi-reading --skill yi-reading
 3. **金錢卦**起卦：三枚硬幣擲六次，每一擲都報給你看
 4. 發卦象圖（本卦；有動爻則連之卦一起）
 5. 按朱熹《易學啟蒙·考變占》定該讀哪一句，**並告訴你為什麼是這一句**
-6. 分三層解讀：情勢（蘇軾）→ 應對（大象傳）→ 收束（榮格）
+6. 解讀：先一小段說清這卦是什麼、前人怎麼看，然後**大部分篇幅落到你問的那件事上**
 
 ```
 $ python3 skills/yi-reading/scripts/reading.py --values 9,8,8,6,7,8
@@ -43,10 +43,10 @@ $ python3 skills/yi-reading/scripts/reading.py --values 9,8,8,6,7,8
 **隨機源是 `secrets`，不是 `random`。** 可復現的偽隨機與共時性互斥——
 用一個能被預先算出來的數做這件事，是自我拆台。測試裏有靜態檢查攔著。
 
-**不得把自撰文字冒充注家原文。** 語言模型寫一段像蘇軾的話，比引對一段真的蘇軾容易得多，
+**引誰的話，必須真是誰的話。** 語言模型寫一段像蘇軾的話，比引對一段真的蘇軾容易得多，
 而讀者無從分辨。所以有 `verify_quote.py`：引文必須是庫中原文的逐字子串，
-比對只忽略空白，標點繁簡一律不歸一化。`coverage.json` 記錄哪些卦真有原文
-——維基文庫的《東坡易傳》只轉錄到第 35 卦，第 36–64 卦沒有就說沒有。
+比對只忽略空白，標點繁簡一律不歸一化；`--any` 還會直接報出處，抄進括號即可。
+自己的話就用自己的口氣說，**不要掛在注家名下**——要麼真引，要麼別署名。
 
 **六爻到卦序的映射不手抄。** `build_table.py` 從八卦符號推導全部 64 條，
 再用序卦「兩兩相耦，非覆即變」的結構不變量自校驗。
@@ -56,7 +56,7 @@ $ python3 skills/yi-reading/scripts/reading.py --values 9,8,8,6,7,8
 ## 開發
 
 ```bash
-python3 -m unittest discover -s tests -v      # 46 個測試，零依賴
+python3 -m unittest discover -s tests -v      # 48 個測試，零依賴
 ```
 
 構建期腳本（改數據或改風格時才跑）：
@@ -64,14 +64,27 @@ python3 -m unittest discover -s tests -v      # 46 個測試，零依賴
 ```bash
 python3 skills/yi-reading/scripts/build_table.py       # 推導卦畫表
 python3 skills/yi-reading/scripts/fetch_texts.py       # 抓經傳
-python3 skills/yi-reading/scripts/fetch_texts.py --dongpo   # 抓東坡易傳
+python3 skills/yi-reading/scripts/fetch_commentary.py  # 抓三家注（六十四卦全）
 python3 skills/yi-reading/scripts/render_hexagrams.py  # 渲染 64 張圖（需 rsvg-convert）
 ```
 
 依據與出處見 [`skills/yi-reading/REFERENCE.md`](skills/yi-reading/REFERENCE.md)。
 
+## 注家
+
+三家全本，六十四卦一卦不缺，皆取自維基文庫的四庫全書本：
+
+| 注家 | 卷次 | 說明 |
+|---|---|---|
+| 蘇軾《東坡易傳》 | 卷 1–6 | 第 1–35 卦另有帶標點的子頁，優先用 |
+| 程頤《伊川易傳》 | 卷 1–4 | 四庫本，無標點 |
+| 朱熹《周易本義》 | 卷 1–2 | 四庫本，無標點 |
+
+四庫本沒有標點，所以引它時取短句，長段落用自己的話講。異體字極多
+（光一個「兌」就有 兌／兑／兊 三種寫法），所以切分按卦畫而不按卦名。
+`□` 是原掃描本字庫外的缺字，照留不猜補。
+
 ## 已知缺口
 
-- 《伊川易傳》《周易本義》尚無可用的結構化電子本。凡按其讀法轉述的，必須標明非原文
 - 大衍筮法未實現（接口預留）。默認金錢卦——榮格為《易經》英譯本起卦用的就是硬幣
 - 卦象圖不標動爻（靜態圖表達不了 2⁶ 種組合），動爻以文字說明
