@@ -157,7 +157,12 @@ class TestKaobianzhan(unittest.TestCase):
     """考變占七條。這一步錯了，後面所有話都跟著錯，且沒有任何外部信號。"""
 
     def read(self, values):
-        return reading_mod.reading(values)["judgement"]
+        """只走起卦與斷卦，繞開發圖——這裏測的是選句子，不是渲染。
+        （繞開也順帶讓這批用例不依賴 rsvg-convert，且快兩個數量級。）"""
+        c = cast_mod.cast(values)
+        primary = cast_mod.by_lines(c["primary"]["lines"])
+        relating = cast_mod.by_lines(c["relating"]["lines"]) if c["relating"] else None
+        return reading_mod.select(primary, c["moving"], relating)
 
     def test_零爻變讀本卦卦辭(self):
         j = self.read([8, 7, 8, 7, 8, 7])  # 未濟，六爻不動
@@ -193,8 +198,8 @@ class TestKaobianzhan(unittest.TestCase):
         主, 輔 = j["readings"]
         self.assertEqual(主["role"], "主")
         self.assertGreater(reading_mod.triple_rank([2, 3, 4]), 10)
-        本 = reading_mod.reading([8, 9, 9, 9, 8, 8])["cast"]["primary"]["no"]
-        之 = reading_mod.reading([8, 9, 9, 9, 8, 8])["cast"]["relating"]["no"]
+        c = cast_mod.cast([8, 9, 9, 9, 8, 8])
+        本, 之 = c["primary"]["no"], c["relating"]["no"]
         self.assertEqual(主["hexagram_no"], 之)
         self.assertEqual(輔["hexagram_no"], 本)
 
@@ -234,7 +239,7 @@ class TestKaobianzhan(unittest.TestCase):
         self.assertEqual(j["moving_count"], 5)
         self.assertEqual(len(j["readings"]), 1)
         r = j["readings"][0]
-        之 = reading_mod.reading([9, 8, 9, 9, 9, 9])["cast"]["relating"]["no"]
+        之 = cast_mod.cast([9, 8, 9, 9, 9, 9])["relating"]["no"]
         self.assertEqual((r["pos"], r["hexagram_no"], r["kind"]), (2, 之, "爻辭"))
 
     def test_六爻變乾占用九(self):
@@ -266,7 +271,7 @@ class TestKaobianzhan(unittest.TestCase):
         """2^6 = 64 種動爻組合全跑一遍：任何一種都必須選得出句子。"""
         for mask in range(64):
             values = [9 if mask >> i & 1 else 7 for i in range(6)]
-            j = reading_mod.reading(values)["judgement"]
+            j = self.read(values)
             self.assertTrue(j["readings"], f"mask={mask:06b} 選不出經文")
             for r in j["readings"]:
                 self.assertTrue(r["text"].strip())
@@ -390,6 +395,55 @@ class TestAssets(unittest.TestCase):
     def test_都不是空文件(self):
         for p in sorted(self.dir.glob("*.png")):
             self.assertGreater(p.stat().st_size, 1000, f"{p.name} 過小，多半沒渲染出來")
+
+
+class TestMovingMarks(unittest.TestCase):
+    """動爻記號畫錯位置，圖上就會指着另一條爻說它在動——而且看不出來。"""
+
+    def setUp(self):
+        import render_hexagrams
+        self.r = render_hexagrams
+
+    def test_老陽記圈老陰記叉(self):
+        marks = self.r.moving_marks("100010", [1, 4])  # 屯：初九陽動、六四陰動
+        self.assertEqual(len(marks), 2)
+        self.assertIn("<circle", marks[0], "初九是陽爻，該記 ○")
+        self.assertIn("<path", marks[1], "六四是陰爻，該記 ×")
+
+    def test_記號對準所指的那一爻(self):
+        """爻位自下而上，圖自上而下畫。這個翻轉錯了，記號會整體上下顛倒。"""
+        import re
+        for pos in range(1, 7):
+            mark = self.r.moving_marks("111111", [pos])[0]
+            cy = float(re.search(r'cy="([\d.]+)"', mark).group(1))
+            bar_top = self.r.TOP + (6 - pos) * self.r.PITCH
+            self.assertAlmostEqual(cy, bar_top + self.r.BAR_T / 2, places=3, msg=f"第 {pos} 爻")
+
+    def test_上爻在最上初爻在最下(self):
+        import re
+        ys = [float(re.search(r'cy="([\d.]+)"', self.r.moving_marks("111111", [p])[0]).group(1))
+              for p in range(1, 7)]
+        self.assertEqual(ys, sorted(ys, reverse=True), "爻位越高，y 應越小")
+
+    def test_無動爻就沒有記號(self):
+        self.assertEqual(self.r.moving_marks("100010", []), [])
+
+    def test_圖上寫出的爻題與_cast_一致(self):
+        for pos in range(1, 7):
+            for yang in (True, False):
+                self.assertEqual(self.r.yao_title(pos, yang), cast_mod.yao_title(pos, yang))
+
+    def test_svg_帶動爻時寫出爻題(self):
+        h = self.r.hexagram(3)
+        out = self.r.svg(h, [1, 4])
+        self.assertIn("動爻", out)
+        self.assertIn("初九、六四", out)
+        self.assertNotIn("動爻", self.r.svg(h), "無動爻時不該有這一行")
+
+    def test_無動爻直接用內置圖(self):
+        p = self.r.render_cast(47, [])
+        self.assertEqual(p.name, "47-困.png")
+        self.assertTrue(p.exists())
 
 
 if __name__ == "__main__":

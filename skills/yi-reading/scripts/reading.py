@@ -234,6 +234,27 @@ def commentary(nos: list[int]) -> list[dict]:
     return out
 
 
+def images(c: dict) -> dict:
+    """本卦與之卦該發哪張圖。本卦有動爻就臨時渲一張帶記號的，之卦一律用內置的。
+
+    路徑相對 skill 目錄——飛書發圖只收當前目錄下的相對路徑，給絕對路徑會被拒。
+    """
+    from render_hexagrams import render_cast  # 構建期腳本，用到才導入
+
+    skill = DATA_DIR.parent
+
+    def rel(p: Path) -> str:
+        try:
+            return "./" + str(p.relative_to(skill))
+        except ValueError:
+            return str(p)
+
+    out = {"primary": rel(render_cast(c["primary"]["no"], c["moving"]))}
+    if c["relating"]:
+        out["relating"] = rel(render_cast(c["relating"]["no"], []))
+    return out
+
+
 def reading(values: list[int] | None = None, cast_result: dict | None = None) -> dict:
     """起一卦並斷之。values 為重放用（六個 6/7/8/9，自下而上）。"""
     c = cast_result or cast(values)
@@ -259,6 +280,7 @@ def reading(values: list[int] | None = None, cast_result: dict | None = None) ->
 
     return {
         "cast": c,
+        "images": images(c),
         "judgement": sel,
         "context": context,
         "commentary": commentary(involved),
@@ -300,6 +322,10 @@ def _print_human(r: dict) -> None:
             print(f"　　《象》曰：{x['xiao_xiang']}")
         if x.get("note"):
             print(f"　　（{x['note']}）")
+
+    print("\n── 卦象圖 ──")
+    for k, v in r["images"].items():
+        print(f"{'本卦' if k == 'primary' else '之卦'}　{v}")
 
     print("\n── 大象傳 ──")
     print(r["context"]["本卦"]["大象傳"])

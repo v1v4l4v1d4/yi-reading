@@ -2,3 +2,6 @@ __pycache__/
 *.py[cod]
 .DS_Store
 .venv/
+
+# 臨時渲染的帶動爻卦象圖
+skills/yi-reading/assets/hexagrams/cast/
