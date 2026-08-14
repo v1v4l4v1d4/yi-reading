@@ -203,28 +203,32 @@ def select(primary: dict, moving: list[int], relating: dict | None) -> dict:
     }
 
 
+WORKS = ("dongpo", "yichuan", "benyi")
+
+
 def commentary(nos: list[int]) -> list[dict]:
-    """取東坡易傳原文。沒有就說沒有——不拿自撰文字填空。"""
-    cov = _coverage()["dongpo"]
+    """取三家注原文。六十四卦皆全，引用時按 citation 註出處。"""
     out = []
     for no in nos:
         h = _hexagram(no)
-        entry = {
-            "commentator": "蘇軾《東坡易傳》",
-            "hexagram_no": no,
-            "hexagram": full_name(h),
-            "available": no in cov["covered"],
-            "source_url": cov["source"],
-        }
-        if entry["available"]:
-            path = DATA_DIR / "commentary" / "dongpo" / f"{no:02d}.json"
+        entry = {"hexagram_no": no, "hexagram": full_name(h), "commentators": []}
+        for slug in WORKS:
+            path = DATA_DIR / "commentary" / slug / f"{no:02d}.json"
+            if not path.exists():  # 只該在數據沒抓全時出現
+                entry["commentators"].append({"slug": slug, "available": False})
+                continue
             d = json.loads(path.read_text(encoding="utf-8"))
-            entry["source_url"] = d["source_url"]
-            entry["text"] = d["text"]
-            entry["quirks"] = cov.get("quirks", {}).get(str(no), [])
-        else:
-            entry["reason"] = (
-                f"維基文庫的《東坡易傳》只轉錄到第 35 卦，第 {no} 卦是紅鏈，無原文可引。"
+            entry["commentators"].append(
+                {
+                    "slug": slug,
+                    "available": True,
+                    "author": d["author"],
+                    "work": d["work"],
+                    "citation": d["citation"],
+                    "edition": d["edition"],
+                    "source_url": d["source_url"],
+                    "text": d["text"],
+                }
             )
         out.append(entry)
     return out
@@ -259,7 +263,9 @@ def reading(values: list[int] | None = None, cast_result: dict | None = None) ->
         "context": context,
         "commentary": commentary(involved),
         "constraints": [
-            "不得將自撰文字冒充注家原文；commentary[].available 為 false 時，如實說明無原文。",
+            "引某家之言，必須是其原文的逐字片段，並在句末括注出處（如「蘇軾說……（《東坡易傳·卷五》）」）。"
+            "引之前用 verify_quote.py 過一遍。",
+            "自己的話就用自己的口氣說，不要掛在某位注家名下。要麼真引，要麼別署名。",
             "不出吉凶斷語，不作預測。目的是看清此刻的位置，不是預告結果。",
         ],
     }
@@ -298,14 +304,17 @@ def _print_human(r: dict) -> None:
     print("\n── 大象傳 ──")
     print(r["context"]["本卦"]["大象傳"])
 
-    print("\n── 蘇軾《東坡易傳》 ──")
+    print("\n── 注家原文 ──")
     for e in r["commentary"]:
-        if e["available"]:
-            print(f"{e['hexagram']}：有原文（{len(e['text'])} 字），見 {e['source_url']}")
-            if e.get("quirks"):
-                print(f"　　體例：{'、'.join(e['quirks'])}")
-        else:
-            print(f"{e['hexagram']}：{e['reason']}")
+        for c in e["commentators"]:
+            if c["available"]:
+                print(
+                    f"{e['hexagram']}　{c['author']}{c['citation']}"
+                    f"（{c['edition']}，{len(c['text'])} 字）"
+                )
+            else:
+                print(f"{e['hexagram']}　{c['slug']}：數據缺失，請重跑 fetch_commentary.py")
+    print("全文用 --json 取；引用前過 verify_quote.py。")
 
 
 def main() -> None:

@@ -274,59 +274,83 @@ class TestKaobianzhan(unittest.TestCase):
 
 
 class TestCommentary(unittest.TestCase):
-    """注解的可用性必須如實上報——這條是「不得冒充原文」的機器判據。"""
+    """三家注：六十四卦一卦不缺，每卦都能報出處。占到哪一卦都得有東西可引。"""
+
+    WORKS = ("dongpo", "yichuan", "benyi")
 
     @classmethod
     def setUpClass(cls):
-        cls.cov = load(SKILL / "data" / "commentary" / "coverage.json")["dongpo"]
+        cls.cov = load(SKILL / "data" / "commentary" / "coverage.json")
+        cls.rows = {r["no"]: r for r in load(SKILL / "data" / "hexagrams.json")}
 
-    def test_覆蓋表自洽(self):
-        covered, missing = set(self.cov["covered"]), set(self.cov["missing"])
-        self.assertEqual(covered | missing, set(range(1, 65)))
-        self.assertEqual(covered & missing, set())
+    def test_三家皆覆蓋六十四卦(self):
+        for slug in self.WORKS:
+            self.assertEqual(self.cov[slug]["covered"], list(range(1, 65)), slug)
 
-    def test_聲稱有原文的都真有文件(self):
-        for no in self.cov["covered"]:
-            path = SKILL / "data" / "commentary" / "dongpo" / f"{no:02d}.json"
-            self.assertTrue(path.exists(), f"第 {no} 卦聲稱已收錄但文件不在")
-            self.assertGreater(len(load(path)["text"]), 200, f"第 {no} 卦原文過短")
+    def test_每卦每家都有文件且不算短(self):
+        for slug in self.WORKS:
+            for no in range(1, 65):
+                path = SKILL / "data" / "commentary" / slug / f"{no:02d}.json"
+                self.assertTrue(path.exists(), f"{slug} 缺第 {no} 卦")
+                self.assertGreater(len(load(path)["text"]), 200, f"{slug} 第 {no} 卦過短")
 
-    def test_聲稱沒有的就不能有文件(self):
-        for no in self.cov["missing"]:
-            path = SKILL / "data" / "commentary" / "dongpo" / f"{no:02d}.json"
-            self.assertFalse(path.exists(), f"第 {no} 卦聲稱缺失卻存在文件——來源記錄不可信")
+    def test_每一則注都落在對應的卦(self):
+        for slug in self.WORKS:
+            for no in range(1, 65):
+                d = load(SKILL / "data" / "commentary" / slug / f"{no:02d}.json")
+                self.assertEqual(d["no"], no)
+                self.assertEqual(d["name"], self.rows[no]["name"], f"{slug} 第 {no} 卦")
 
-    def test_沒有原文時如實說明(self):
-        entry = reading_mod.commentary([64])[0]
-        self.assertFalse(entry["available"])
-        self.assertIn("reason", entry)
-        self.assertNotIn("text", entry)
+    def test_出處齊備且卷次合理(self):
+        """引用要括注到卷，所以 citation 與 juan 必須齊、必須對得上。"""
+        limits = {"dongpo": 6, "yichuan": 4, "benyi": 2}
+        for slug in self.WORKS:
+            for no in range(1, 65):
+                d = load(SKILL / "data" / "commentary" / slug / f"{no:02d}.json")
+                self.assertTrue(1 <= d["juan"] <= limits[slug], f"{slug} 第 {no} 卦 卷{d['juan']}")
+                self.assertTrue(d["citation"].startswith(f"《{d['work']}·卷"), d["citation"])
+                self.assertTrue(d["citation"].endswith("》"), d["citation"])
+                self.assertIn("zh.wikisource.org", d["source_url"])
 
-    def test_有原文時給出處(self):
-        entry = reading_mod.commentary([3])[0]
-        self.assertTrue(entry["available"])
-        self.assertIn("zh.wikisource.org", entry["source_url"])
-        self.assertIn("屯", entry["text"])
+    def test_卷次隨卦序單調(self):
+        """卦序往後走，卷次只能不減。一旦回頭，說明切分把某卦歸錯了卷。"""
+        for slug in self.WORKS:
+            juan = [load(SKILL / "data" / "commentary" / slug / f"{n:02d}.json")["juan"]
+                    for n in range(1, 65)]
+            self.assertEqual(juan, sorted(juan), slug)
 
-    def test_頁面殘留模板痕跡就算抓壞了(self):
+    def test_沒有模板殘留(self):
         """曾經有 14 個頁面把 {{header}} 的參數行當正文抓了進來。"""
-        for no in self.cov["covered"]:
-            text = load(SKILL / "data" / "commentary" / "dongpo" / f"{no:02d}.json")["text"]
-            first = text.splitlines()[0]
-            self.assertFalse(first.startswith(("|", "{{", "}}")), f"第 {no} 卦仍有模板殘留")
-            self.assertNotIn("| title", text, f"第 {no} 卦仍有模板殘留")
+        for slug in self.WORKS:
+            for no in range(1, 65):
+                text = load(SKILL / "data" / "commentary" / slug / f"{no:02d}.json")["text"]
+                self.assertFalse(text.splitlines()[0].startswith(("|", "{{", "}}")),
+                                 f"{slug} 第 {no} 卦有模板殘留")
+                for junk in ("{{SK", "| title", "SKQS header", "onlyinclude"):
+                    self.assertNotIn(junk, text, f"{slug} 第 {no} 卦殘留 {junk}")
 
-    def test_每一則注都必須落在對應的卦(self):
-        rows = {r["no"]: r for r in load(SKILL / "data" / "hexagrams.json")}
-        for no in self.cov["covered"]:
-            d = load(SKILL / "data" / "commentary" / "dongpo" / f"{no:02d}.json")
-            self.assertEqual(d["no"], no)
-            self.assertEqual(d["name"], rows[no]["name"])
+    def test_reading_帶回三家並各有出處(self):
+        entry = reading_mod.commentary([47])[0]
+        self.assertEqual(len(entry["commentators"]), 3)
+        for c in entry["commentators"]:
+            self.assertTrue(c["available"])
+            self.assertTrue(c["citation"] and c["author"] and c["text"])
+
+    def test_後半段的卦也有蘇注(self):
+        """第一版只有 1–35 卦，占到後面就沒得引。這一條盯住那個缺口不再出現。"""
+        for no in (36, 47, 54, 64):
+            c = next(x for x in reading_mod.commentary([no])[0]["commentators"]
+                     if x["slug"] == "dongpo")
+            self.assertTrue(c["available"] and len(c["text"]) > 200, f"第 {no} 卦無蘇注")
 
 
 class TestVerifyQuote(unittest.TestCase):
+    """語言模型寫一段像蘇軾的話，比引對一段真的蘇軾容易得多，而讀者分不出來。
+    所以「引誰的話必須真是誰的話」不能靠自覺，要有judge得了的判據。"""
+
     def test_原文通過(self):
         self.assertTrue(verify_quote.verify("因世之“屯”，而務往以求功", verify_quote.dongpo_text(3)))
+        self.assertTrue(verify_quote.verify("困者坐而見制", verify_quote.dongpo_text(47)))
 
     def test_自撰不通過(self):
         self.assertFalse(verify_quote.verify("蘇軾以為，處屯之世宜靜以待時", verify_quote.dongpo_text(3)))
@@ -340,9 +364,13 @@ class TestVerifyQuote(unittest.TestCase):
         self.assertTrue(verify_quote.verify("雲雷，屯；君子以經綸", verify_quote.jing_text(3)))
         self.assertFalse(verify_quote.verify("雲雷，屯；君子以經世", verify_quote.jing_text(3)))
 
-    def test_缺原文時報缺而不是報無(self):
+    def test_三家都可核(self):
+        self.assertTrue(verify_quote.verify("行吾義而已", verify_quote.work_entry("yichuan", 47)["text"]))
+        self.assertTrue(verify_quote.verify("當務晦黙", verify_quote.work_entry("benyi", 47)["text"]))
+
+    def test_未收的數據要報錯而不是靜默通過(self):
         with self.assertRaises(LookupError):
-            verify_quote.dongpo_text(64)
+            verify_quote.work_entry("dongpo", 99)
 
 
 class TestAssets(unittest.TestCase):
