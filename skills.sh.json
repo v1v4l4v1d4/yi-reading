@@ -1,0 +1,11 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "易 / yi",
+      "description": "以《周易》照見當下處境的對話式工具。不算命、不斷吉凶——立足於榮格的共時性。",
+      "skills": ["yi-reading"]
+    }
+  ]
+}

@@ -1,0 +1,514 @@
+[
+  {
+    "no": 1,
+    "name": "乾",
+    "lower": "乾",
+    "upper": "乾",
+    "lines": "111111",
+    "unicode": "䷀"
+  },
+  {
+    "no": 2,
+    "name": "坤",
+    "lower": "坤",
+    "upper": "坤",
+    "lines": "000000",
+    "unicode": "䷁"
+  },
+  {
+    "no": 3,
+    "name": "屯",
+    "lower": "震",
+    "upper": "坎",
+    "lines": "100010",
+    "unicode": "䷂"
+  },
+  {
+    "no": 4,
+    "name": "蒙",
+    "lower": "坎",
+    "upper": "艮",
+    "lines": "010001",
+    "unicode": "䷃"
+  },
+  {
+    "no": 5,
+    "name": "需",
+    "lower": "乾",
+    "upper": "坎",
+    "lines": "111010",
+    "unicode": "䷄"
+  },
+  {
+    "no": 6,
+    "name": "訟",
+    "lower": "坎",
+    "upper": "乾",
+    "lines": "010111",
+    "unicode": "䷅"
+  },
+  {
+    "no": 7,
+    "name": "師",
+    "lower": "坎",
+    "upper": "坤",
+    "lines": "010000",
+    "unicode": "䷆"
+  },
+  {
+    "no": 8,
+    "name": "比",
+    "lower": "坤",
+    "upper": "坎",
+    "lines": "000010",
+    "unicode": "䷇"
+  },
+  {
+    "no": 9,
+    "name": "小畜",
+    "lower": "乾",
+    "upper": "巽",
+    "lines": "111011",
+    "unicode": "䷈"
+  },
+  {
+    "no": 10,
+    "name": "履",
+    "lower": "兌",
+    "upper": "乾",
+    "lines": "110111",
+    "unicode": "䷉"
+  },
+  {
+    "no": 11,
+    "name": "泰",
+    "lower": "乾",
+    "upper": "坤",
+    "lines": "111000",
+    "unicode": "䷊"
+  },
+  {
+    "no": 12,
+    "name": "否",
+    "lower": "坤",
+    "upper": "乾",
+    "lines": "000111",
+    "unicode": "䷋"
+  },
+  {
+    "no": 13,
+    "name": "同人",
+    "lower": "離",
+    "upper": "乾",
+    "lines": "101111",
+    "unicode": "䷌"
+  },
+  {
+    "no": 14,
+    "name": "大有",
+    "lower": "乾",
+    "upper": "離",
+    "lines": "111101",
+    "unicode": "䷍"
+  },
+  {
+    "no": 15,
+    "name": "謙",
+    "lower": "艮",
+    "upper": "坤",
+    "lines": "001000",
+    "unicode": "䷎"
+  },
+  {
+    "no": 16,
+    "name": "豫",
+    "lower": "坤",
+    "upper": "震",
+    "lines": "000100",
+    "unicode": "䷏"
+  },
+  {
+    "no": 17,
+    "name": "隨",
+    "lower": "震",
+    "upper": "兌",
+    "lines": "100110",
+    "unicode": "䷐"
+  },
+  {
+    "no": 18,
+    "name": "蠱",
+    "lower": "巽",
+    "upper": "艮",
+    "lines": "011001",
+    "unicode": "䷑"
+  },
+  {
+    "no": 19,
+    "name": "臨",
+    "lower": "兌",
+    "upper": "坤",
+    "lines": "110000",
+    "unicode": "䷒"
+  },
+  {
+    "no": 20,
+    "name": "觀",
+    "lower": "坤",
+    "upper": "巽",
+    "lines": "000011",
+    "unicode": "䷓"
+  },
+  {
+    "no": 21,
+    "name": "噬嗑",
+    "lower": "震",
+    "upper": "離",
+    "lines": "100101",
+    "unicode": "䷔"
+  },
+  {
+    "no": 22,
+    "name": "賁",
+    "lower": "離",
+    "upper": "艮",
+    "lines": "101001",
+    "unicode": "䷕"
+  },
+  {
+    "no": 23,
+    "name": "剝",
+    "lower": "坤",
+    "upper": "艮",
+    "lines": "000001",
+    "unicode": "䷖"
+  },
+  {
+    "no": 24,
+    "name": "復",
+    "lower": "震",
+    "upper": "坤",
+    "lines": "100000",
+    "unicode": "䷗"
+  },
+  {
+    "no": 25,
+    "name": "无妄",
+    "lower": "震",
+    "upper": "乾",
+    "lines": "100111",
+    "unicode": "䷘"
+  },
+  {
+    "no": 26,
+    "name": "大畜",
+    "lower": "乾",
+    "upper": "艮",
+    "lines": "111001",
+    "unicode": "䷙"
+  },
+  {
+    "no": 27,
+    "name": "頤",
+    "lower": "震",
+    "upper": "艮",
+    "lines": "100001",
+    "unicode": "䷚"
+  },
+  {
+    "no": 28,
+    "name": "大過",
+    "lower": "巽",
+    "upper": "兌",
+    "lines": "011110",
+    "unicode": "䷛"
+  },
+  {
+    "no": 29,
+    "name": "坎",
+    "lower": "坎",
+    "upper": "坎",
+    "lines": "010010",
+    "unicode": "䷜"
+  },
+  {
+    "no": 30,
+    "name": "離",
+    "lower": "離",
+    "upper": "離",
+    "lines": "101101",
+    "unicode": "䷝"
+  },
+  {
+    "no": 31,
+    "name": "咸",
+    "lower": "艮",
+    "upper": "兌",
+    "lines": "001110",
+    "unicode": "䷞"
+  },
+  {
+    "no": 32,
+    "name": "恆",
+    "lower": "巽",
+    "upper": "震",
+    "lines": "011100",
+    "unicode": "䷟"
+  },
+  {
+    "no": 33,
+    "name": "遯",
+    "lower": "艮",
+    "upper": "乾",
+    "lines": "001111",
+    "unicode": "䷠"
+  },
+  {
+    "no": 34,
+    "name": "大壯",
+    "lower": "乾",
+    "upper": "震",
+    "lines": "111100",
+    "unicode": "䷡"
+  },
+  {
+    "no": 35,
+    "name": "晉",
+    "lower": "坤",
+    "upper": "離",
+    "lines": "000101",
+    "unicode": "䷢"
+  },
+  {
+    "no": 36,
+    "name": "明夷",
+    "lower": "離",
+    "upper": "坤",
+    "lines": "101000",
+    "unicode": "䷣"
+  },
+  {
+    "no": 37,
+    "name": "家人",
+    "lower": "離",
+    "upper": "巽",
+    "lines": "101011",
+    "unicode": "䷤"
+  },
+  {
+    "no": 38,
+    "name": "睽",
+    "lower": "兌",
+    "upper": "離",
+    "lines": "110101",
+    "unicode": "䷥"
+  },
+  {
+    "no": 39,
+    "name": "蹇",
+    "lower": "艮",
+    "upper": "坎",
+    "lines": "001010",
+    "unicode": "䷦"
+  },
+  {
+    "no": 40,
+    "name": "解",
+    "lower": "坎",
+    "upper": "震",
+    "lines": "010100",
+    "unicode": "䷧"
+  },
+  {
+    "no": 41,
+    "name": "損",
+    "lower": "兌",
+    "upper": "艮",
+    "lines": "110001",
+    "unicode": "䷨"
+  },
+  {
+    "no": 42,
+    "name": "益",
+    "lower": "震",
+    "upper": "巽",
+    "lines": "100011",
+    "unicode": "䷩"
+  },
+  {
+    "no": 43,
+    "name": "夬",
+    "lower": "乾",
+    "upper": "兌",
+    "lines": "111110",
+    "unicode": "䷪"
+  },
+  {
+    "no": 44,
+    "name": "姤",
+    "lower": "巽",
+    "upper": "乾",
+    "lines": "011111",
+    "unicode": "䷫"
+  },
+  {
+    "no": 45,
+    "name": "萃",
+    "lower": "坤",
+    "upper": "兌",
+    "lines": "000110",
+    "unicode": "䷬"
+  },
+  {
+    "no": 46,
+    "name": "升",
+    "lower": "巽",
+    "upper": "坤",
+    "lines": "011000",
+    "unicode": "䷭"
+  },
+  {
+    "no": 47,
+    "name": "困",
+    "lower": "坎",
+    "upper": "兌",
+    "lines": "010110",
+    "unicode": "䷮"
+  },
+  {
+    "no": 48,
+    "name": "井",
+    "lower": "巽",
+    "upper": "坎",
+    "lines": "011010",
+    "unicode": "䷯"
+  },
+  {
+    "no": 49,
+    "name": "革",
+    "lower": "離",
+    "upper": "兌",
+    "lines": "101110",
+    "unicode": "䷰"
+  },
+  {
+    "no": 50,
+    "name": "鼎",
+    "lower": "巽",
+    "upper": "離",
+    "lines": "011101",
+    "unicode": "䷱"
+  },
+  {
+    "no": 51,
+    "name": "震",
+    "lower": "震",
+    "upper": "震",
+    "lines": "100100",
+    "unicode": "䷲"
+  },
+  {
+    "no": 52,
+    "name": "艮",
+    "lower": "艮",
+    "upper": "艮",
+    "lines": "001001",
+    "unicode": "䷳"
+  },
+  {
+    "no": 53,
+    "name": "漸",
+    "lower": "艮",
+    "upper": "巽",
+    "lines": "001011",
+    "unicode": "䷴"
+  },
+  {
+    "no": 54,
+    "name": "歸妹",
+    "lower": "兌",
+    "upper": "震",
+    "lines": "110100",
+    "unicode": "䷵"
+  },
+  {
+    "no": 55,
+    "name": "豐",
+    "lower": "離",
+    "upper": "震",
+    "lines": "101100",
+    "unicode": "䷶"
+  },
+  {
+    "no": 56,
+    "name": "旅",
+    "lower": "艮",
+    "upper": "離",
+    "lines": "001101",
+    "unicode": "䷷"
+  },
+  {
+    "no": 57,
+    "name": "巽",
+    "lower": "巽",
+    "upper": "巽",
+    "lines": "011011",
+    "unicode": "䷸"
+  },
+  {
+    "no": 58,
+    "name": "兌",
+    "lower": "兌",
+    "upper": "兌",
+    "lines": "110110",
+    "unicode": "䷹"
+  },
+  {
+    "no": 59,
+    "name": "渙",
+    "lower": "坎",
+    "upper": "巽",
+    "lines": "010011",
+    "unicode": "䷺"
+  },
+  {
+    "no": 60,
+    "name": "節",
+    "lower": "兌",
+    "upper": "坎",
+    "lines": "110010",
+    "unicode": "䷻"
+  },
+  {
+    "no": 61,
+    "name": "中孚",
+    "lower": "兌",
+    "upper": "巽",
+    "lines": "110011",
+    "unicode": "䷼"
+  },
+  {
+    "no": 62,
+    "name": "小過",
+    "lower": "艮",
+    "upper": "震",
+    "lines": "001100",
+    "unicode": "䷽"
+  },
+  {
+    "no": 63,
+    "name": "既濟",
+    "lower": "離",
+    "upper": "坎",
+    "lines": "101010",
+    "unicode": "䷾"
+  },
+  {
+    "no": 64,
+    "name": "未濟",
+    "lower": "坎",
+    "upper": "離",
+    "lines": "010101",
+    "unicode": "䷿"
+  }
+]

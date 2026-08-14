@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1200" viewBox="0 0 1080 1200">
+<rect width="1080" height="1200" fill="#12100E"/>
+<text x="140" y="168" font-family="Hiragino Sans GB, PingFang SC, Noto Sans CJK SC, sans-serif" font-size="30" fill="#6F685C" letter-spacing="0.34em">第八卦</text>
+<text x="940" y="168" font-family="Songti SC, STSong, Songti TC, Noto Serif CJK SC, serif" font-size="46" fill="#37312A" text-anchor="end">䷇</text>
+<rect x="140" y="300" width="124" height="13" fill="#E9E3D7"/><rect x="316" y="300" width="124" height="13" fill="#E9E3D7"/>
+<rect x="140" y="346" width="300" height="13" fill="#E9E3D7"/>
+<rect x="140" y="392" width="124" height="13" fill="#E9E3D7"/><rect x="316" y="392" width="124" height="13" fill="#E9E3D7"/>
+<rect x="140" y="438" width="124" height="13" fill="#E9E3D7"/><rect x="316" y="438" width="124" height="13" fill="#E9E3D7"/>
+<rect x="140" y="484" width="124" height="13" fill="#E9E3D7"/><rect x="316" y="484" width="124" height="13" fill="#E9E3D7"/>
+<rect x="140" y="530" width="124" height="13" fill="#E9E3D7"/><rect x="316" y="530" width="124" height="13" fill="#E9E3D7"/>
+<text x="494" y="359" font-family="Hiragino Sans GB, PingFang SC, Noto Sans CJK SC, sans-serif" font-size="26" fill="#6F685C">坎　上</text>
+<text x="494" y="497" font-family="Hiragino Sans GB, PingFang SC, Noto Sans CJK SC, sans-serif" font-size="26" fill="#6F685C">坤　下</text>
+<text x="140" y="793" font-family="Songti SC, STSong, Songti TC, Noto Serif CJK SC, serif" font-size="150" fill="#E9E3D7">比</text>
+<text x="140" y="869" font-family="Hiragino Sans GB, PingFang SC, Noto Sans CJK SC, sans-serif" font-size="38" fill="#B0A899" letter-spacing="0.22em">水地比</text>
+<rect x="140" y="949" width="180" height="1" fill="#37312A"/>
+<text x="140" y="1025" font-family="Songti SC, STSong, Songti TC, Noto Serif CJK SC, serif" font-size="40" fill="#B0A899" letter-spacing="0.06em">吉。原筮元永貞，无咎。</text>
+</svg>
