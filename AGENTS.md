@@ -51,7 +51,7 @@ skill 装到用户机器上就是坏的。
 python3 -m unittest discover -s tests
 ```
 
-62 个测试，只用标准库，跑完不到一秒。**断卦逻辑改了必须全绿再提交**
+69 个测试，只用标准库，跑完不到一秒。**断卦逻辑改了必须全绿再提交**
 ——考变占选错句子不会报错，输出照样通顺，没有任何外部信号。
 
 改数据或图：
@@ -60,7 +60,7 @@ python3 -m unittest discover -s tests
 python3 skills/yi-reading/scripts/build_table.py            # → data/_table.json
 python3 skills/yi-reading/scripts/fetch_texts.py            # → data/hexagrams.json
 python3 skills/yi-reading/scripts/fetch_commentary.py       # → data/commentary/（三家）
-python3 skills/yi-reading/scripts/render_hexagrams.py       # → assets/（需 rsvg-convert）
+python3 skills/yi-reading/scripts/render_hexagrams.py       # → assets/（构建期，需 rsvg-convert）
 ```
 
 抓取一律走 MediaWiki API，不解析 HTML。ctext.org 对自动访问弹验证码，

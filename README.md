@@ -78,7 +78,7 @@ can only be held down by a machine.
 ## Development
 
 ```bash
-python3 -m unittest discover -s tests -v      # 62 tests, standard library only
+python3 -m unittest discover -s tests -v      # 69 tests, standard library only
 ```
 
 Build-time scripts (run only when changing data or restyling):
@@ -87,7 +87,7 @@ Build-time scripts (run only when changing data or restyling):
 python3 skills/yi-reading/scripts/build_table.py       # derive the hexagram table
 python3 skills/yi-reading/scripts/fetch_texts.py       # fetch the classic and its wings
 python3 skills/yi-reading/scripts/fetch_commentary.py  # fetch all three commentaries, all 64
-python3 skills/yi-reading/scripts/render_hexagrams.py  # render the 64 images (needs rsvg-convert)
+python3 skills/yi-reading/scripts/render_hexagrams.py  # render the 64 base images (build-time, needs rsvg-convert)
 ```
 
 Sources and reasoning: [`skills/yi-reading/REFERENCE.md`](skills/yi-reading/REFERENCE.md)
@@ -116,9 +116,9 @@ from the scan's font; it is left as is and never guessed at.
   default is the coin method — which is what Jung used when he cast for the
   Wilhelm/Baynes edition
 - The 64 built-in images carry no moving-line marks, since 2⁶ combinations
-  cannot be pre-generated. When a line moves, one image is rendered on the spot;
-  that needs `rsvg-convert`, and without it the skill falls back to the unmarked
-  image and says so
+  cannot be pre-generated. When a line moves, the ○/× marks are composited onto
+  the base image with the standard library — **no runtime dependency**.
+  `rsvg-convert` is needed only at build time, to render the 64 base images
 
 ## Text sources and licence
 

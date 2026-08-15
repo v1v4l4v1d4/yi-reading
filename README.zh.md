@@ -59,7 +59,7 @@ $ python3 skills/yi-reading/scripts/reading.py --values 9,8,8,6,7,8
 ## 开发
 
 ```bash
-python3 -m unittest discover -s tests -v      # 62 个测试，零依赖
+python3 -m unittest discover -s tests -v      # 69 个测试，零依赖
 ```
 
 构建期脚本（改数据或改风格时才跑）：
@@ -68,7 +68,7 @@ python3 -m unittest discover -s tests -v      # 62 个测试，零依赖
 python3 skills/yi-reading/scripts/build_table.py       # 推导卦画表
 python3 skills/yi-reading/scripts/fetch_texts.py       # 抓经传
 python3 skills/yi-reading/scripts/fetch_commentary.py  # 抓三家注（六十四卦全）
-python3 skills/yi-reading/scripts/render_hexagrams.py  # 渲染 64 张图（需 rsvg-convert）
+python3 skills/yi-reading/scripts/render_hexagrams.py  # 渲染 64 张底图（构建期，需 rsvg-convert）
 ```
 
 依据与出处见 [`skills/yi-reading/REFERENCE.md`](skills/yi-reading/REFERENCE.md)。
@@ -90,7 +90,7 @@ python3 skills/yi-reading/scripts/render_hexagrams.py  # 渲染 64 张图（需 
 ## 已知缺口
 
 - 大衍筮法未实现（接口预留）。默认金钱卦——荣格为《易经》英译本起卦用的就是硬币
-- 内置那 64 张图不带动爻记号（2⁶ 种组合没法预生成）；有动爻时临时渲一张，需要 `rsvg-convert`，没有就退回无记号的那张并说明
+- 内置那 64 张图不带动爻记号（2⁶ 种组合没法预生成）；有动爻时用标准库把 ○ × 叠上去，**运行时零依赖**
 
 ## 文本来源与授权
 

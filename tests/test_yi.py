@@ -378,6 +378,95 @@ class TestVerifyQuote(unittest.TestCase):
             verify_quote.work_entry("dongpo", 99)
 
 
+class TestPngMarks(unittest.TestCase):
+    """动爻记号改成用标准库往底图上叠，运行时不再需要 rsvg-convert。
+
+    这条路径要守两件事：**别把底图改坏**，以及**记号别画错爻位**——
+    画错了图上就会指着另一条爻说它在动，而且看不出来。
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        import png_marks
+        import render_hexagrams
+        cls.pm = png_marks
+        cls.r = render_hexagrams
+        cls.base = render_hexagrams.OUT_PNG / "03-屯.png"
+        if not cls.base.exists():
+            raise unittest.SkipTest("底图尚未生成")
+
+    def test_读写往返不改一个字节(self):
+        w, h, px = self.pm.read_rgb(self.base)
+        import tempfile
+        out = Path(tempfile.mkdtemp()) / "rt.png"
+        self.pm.write_rgb(out, w, h, px)
+        w2, h2, px2 = self.pm.read_rgb(out)
+        self.assertEqual((w, h), (w2, h2))
+        self.assertEqual(px, px2)
+
+    def test_只支持这一种格式其余报错(self):
+        """猜格式会画出一张看着正常但颜色错乱的图，所以宁可报错。"""
+        import tempfile
+        bad = Path(tempfile.mkdtemp()) / "bad.png"
+        bad.write_bytes(b"not a png at all")
+        with self.assertRaises(ValueError):
+            self.pm.read_rgb(bad)
+
+    def test_两条路的记号坐标必须一致(self):
+        """SVG（构建期）与 PNG（运行期）画的是同一卦，坐标错开就会指错爻。"""
+        import re
+        lines = self.r.hexagram(3)["lines"]
+        for pos in range(1, 7):
+            svg_mark = self.r.moving_marks(lines, [pos])[0]
+            circle = re.search(r'cx="([\d.]+)"\s+cy="([\d.]+)"', svg_mark)
+            if circle:
+                svg_xy = (float(circle.group(1)), float(circle.group(2)))
+            else:  # 叉是 <path d="M… L… M… L…">，取对角线两端的中点
+                d = re.search(r'\sd="([^"]+)"', svg_mark).group(1)
+                nums = [float(v) for v in re.findall(r"-?\d+(?:\.\d+)?", d)]
+                svg_xy = ((nums[0] + nums[2]) / 2, (nums[1] + nums[3]) / 2)
+            cx, cy, shape = self.r.mark_geometry(lines, [pos])[0]
+            self.assertAlmostEqual(cx, svg_xy[0], places=2, msg=f"第 {pos} 爻 x")
+            self.assertAlmostEqual(cy, svg_xy[1], places=2, msg=f"第 {pos} 爻 y")
+            self.assertEqual(shape, "ring" if lines[pos - 1] == "1" else "cross")
+
+    def test_阳爻画圈阴爻画叉(self):
+        g = self.r.mark_geometry("100010", [1, 4])  # 屯：初九阳、六四阴
+        self.assertEqual([s for _, _, s in g], ["ring", "cross"])
+
+    def test_只在记号附近改动像素(self):
+        w, h, before = self.pm.read_rgb(self.base)
+        out = self.r.render_cast(3, [1, 4])
+        w2, h2, after = self.pm.read_rgb(out)
+        self.assertEqual((w, h), (w2, h2))
+        self.assertNotEqual(before, after, "记号根本没画上")
+
+        marks = self.r.mark_geometry(self.r.hexagram(3)["lines"], [1, 4])
+        reach = 14
+        for i in range(0, len(before), 3):
+            if before[i:i + 3] == after[i:i + 3]:
+                continue
+            px, py = (i // 3) % w, (i // 3) // w
+            near = any(abs(px - cx) <= reach and abs(py - cy) <= reach for cx, cy, _ in marks)
+            self.assertTrue(near, f"({px},{py}) 离任何记号都远，底图被改坏了")
+
+    def test_没有_rsvg_也能出记号(self):
+        """整件事的目的就是这个：使用方不装 librsvg 也拿得到完整的图。"""
+        import shutil
+        real = shutil.which
+        shutil.which = lambda name: None  # 假装环境里什么都没有
+        try:
+            out = self.r.render_cast(3, [1, 4])
+            self.assertTrue(out.exists() and out.stat().st_size > 1000)
+            self.assertIn("cast", str(out))
+        finally:
+            shutil.which = real
+
+    def test_无动爻仍然直接用内置图(self):
+        p = self.r.render_cast(47, [])
+        self.assertEqual(p.name, "47-困.png")
+
+
 class TestBriefCheck(unittest.TestCase):
     """简读 200 字的上限。「简明扼要」没有判据，靠自觉守不住——所以有人数。"""
 
