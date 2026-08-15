@@ -7,19 +7,24 @@
 一个 `npx skills` 标准 skills 仓库。目前只有一个 skill：`skills/yi-reading/`。
 
 ```
-README.md              倉庫說明
+README.md              仓库说明（英文，主体）
+README.zh.md           仓库说明（简体中文）
 AGENTS.md              本文件
 CLAUDE.md              一行，指向本文件
-skills.sh.json         skills.sh 注冊元數據
-tests/test_yi.py       回歸測試，零依賴
+LICENSE                MIT
+skills.sh.json         skills.sh 注册元数据
+tests/test_yi.py       回归测试，零依赖
 skills/
   yi-reading/
-    SKILL.md           對話流程、解讀寫法、禁止事項
-    REFERENCE.md       斷卦規則的原文出處與驗算
-    scripts/           起卦、斷卦、驗引文；另有三個構建期腳本
-    data/              經傳、注解、覆蓋記錄
-    assets/hexagrams/  64 張 PNG（svg/ 下為源）
+    SKILL.md           对话流程、解读写法、禁止事项
+    REFERENCE.md       断卦规则的原文出处与验算
+    scripts/           起卦、断卦、验引文、数简读字数；另有四个构建期脚本
+    data/              经传、注解、覆盖记录
+    assets/hexagrams/  64 张 PNG（svg/ 下为源）
 ```
+
+改动文档时注意：**README.md 是英文主体，README.zh.md 是中文版，两边都要改。**
+两个文件顶部互相链接。
 
 ## 四条不能破的规矩
 

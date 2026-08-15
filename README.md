@@ -1,26 +1,37 @@
 # 乂
 
-一个对话式的《周易》占问 skill，仓库与 skill 名 `yi-reading`。起卦、断卦、解卦，附六十四张卦象图与注家原文。
+<sub>**English** · [简体中文](README.zh.md)</sub>
 
-**它不算命。** 立足点是荣格的共时性：卦不预告将来，它把提问那一刻的心境
-翻译成一个可以端详的形状。人看见自己此刻所处的位置，行动就从看见里自己长出来。
-所以这里不出吉凶断语、不回答「会不会成」「什么时候」。
+A conversational I Ching skill. It casts a hexagram, decides which line of the
+classic actually applies, sends you the diagram, and reads it back to you —
+with verbatim commentary from three Song-dynasty masters. Repo and skill name:
+`yi-reading`.
 
-## 安装
+**It does not tell fortunes.** The premise is Jung's synchronicity: the hexagram
+does not forecast anything. It renders the state of mind you were in when you
+asked into a shape you can look at. You see where you are standing, and the next
+move grows out of having seen it. So there are no auspicious/inauspicious
+verdicts here, and no answers to "will it work out" or "when".
+
+## Install
 
 ```bash
 npx skills add v1v4l4v1d4/yi-reading --skill yi-reading
 ```
 
-## 它做什么
+## What it does
 
-1. 把你带来的一团事情，收敛成一个**可占的问题**——问位置与方向，不问结果
-2. 复述一遍，等你确认
-3. **金钱卦**起卦：三枚硬币掷六次，每一掷都报给你看
-4. 发卦象图（本卦；有动爻则连之卦一起）
-5. 按朱熹《易学启蒙·考变占》定该读哪一句，**并告诉你为什么是这一句**
-6. 解读：**默认出简读**——白话，200 字以内，一句说清这卦是什么，两三句落到你的处境。
-   问过你要不要展开，才出精读（引原文、讲注家、逐条落到细节）。偏好记下来，以后不再重问
+1. Takes the tangle you arrive with and narrows it to **a question that can be
+   cast** — one about position and direction, not about outcome
+2. Reads the rewritten question back and waits for you to confirm it
+3. Casts by the **three-coin method**, six throws, reporting every throw
+4. Sends the hexagram image (and the relating hexagram, if any line is moving)
+5. Selects the line to read by Zhu Xi's *Kaobianzhan* (考變占) — **and tells you
+   why that line and not another**
+6. Reads it. **Brief by default**: plain language, under 200 characters, one
+   sentence on what the hexagram is and two or three on your situation. It asks
+   whether you want it opened up before giving the long form — original quotes,
+   the commentators, line by line. Your preference is remembered
 
 ```
 $ python3 skills/yi-reading/scripts/reading.py --values 9,8,8,6,7,8
@@ -39,63 +50,84 @@ $ python3 skills/yi-reading/scripts/reading.py --values 9,8,8,6,7,8
 [輔] 水雷屯 初九　初九：磐桓，利居貞，利建侯。
 ```
 
-## 三条写进代码的规矩
+## Three rules written into the code
 
-**随机源是 `secrets`，不是 `random`。** 可复现的伪随机与共时性互斥——
-用一个能被预先算出来的数做这件事，是自我拆台。测试里有静态检查拦著。
+**The randomness comes from `secrets`, not `random`.** A reproducible
+pseudo-random number and synchronicity are mutually exclusive — doing this with
+a number that could have been computed in advance defeats the entire premise.
+A static check in the test suite enforces it.
 
-**引谁的话，必须真是谁的话。** 语言模型写一段像苏轼的话，比引对一段真的苏轼容易得多，
-而读者无从分辨。所以有 `verify_quote.py`：引文必须是库中原文的逐字子串，
-比对只忽略空白，标点繁简一律不归一化；`--any` 还会直接报出处，抄进括号即可。
-自己的话就用自己的口气说，**不要挂在注家名下**——要么真引，要么别署名。
+**If you attribute a line to someone, it has to be theirs.** A language model
+can write a passage that sounds like Su Shi far more easily than it can quote
+one, and the reader cannot tell the difference. Hence `verify_quote.py`: a
+quotation must be a character-for-character substring of the stored source.
+Only whitespace is ignored — punctuation and character variants are never
+normalised, because normalising is just permission to alter the text. `--any`
+searches all three commentaries plus the classic and reports where the line
+came from, ready to paste into a citation. Anything in your own words stays in
+your own voice: **quote it or don't sign someone's name to it.**
 
-**六爻到卦序的映射不手抄。** `build_table.py` 从八卦符号推导全部 64 条，
-再用序卦「两两相耦，非覆即变」的结构不变量自校验。
-写设计文档时我手抄这张表，两次抄错（屯、未济），肉眼校对不出来——
-这类数据只能靠机器兜。
+**The six-line-to-hexagram table is never transcribed by hand.**
+`build_table.py` derives all 64 entries from the Unicode trigram symbols and
+then checks itself against the structural invariant of the King Wen sequence
+(each pair is either the inversion or the complement of the other). While
+writing the design doc I transcribed that table by hand and got two entries
+wrong — 屯 and 未濟 — and proofreading did not catch either. This kind of data
+can only be held down by a machine.
 
-## 开发
+## Development
 
 ```bash
-python3 -m unittest discover -s tests -v      # 62 個測試，零依賴
+python3 -m unittest discover -s tests -v      # 62 tests, standard library only
 ```
 
-构建期脚本（改数据或改风格时才跑）：
+Build-time scripts (run only when changing data or restyling):
 
 ```bash
-python3 skills/yi-reading/scripts/build_table.py       # 推導卦畫表
-python3 skills/yi-reading/scripts/fetch_texts.py       # 抓經傳
-python3 skills/yi-reading/scripts/fetch_commentary.py  # 抓三家注（六十四卦全）
-python3 skills/yi-reading/scripts/render_hexagrams.py  # 渲染 64 張圖（需 rsvg-convert）
+python3 skills/yi-reading/scripts/build_table.py       # derive the hexagram table
+python3 skills/yi-reading/scripts/fetch_texts.py       # fetch the classic and its wings
+python3 skills/yi-reading/scripts/fetch_commentary.py  # fetch all three commentaries, all 64
+python3 skills/yi-reading/scripts/render_hexagrams.py  # render the 64 images (needs rsvg-convert)
 ```
 
-依据与出处见 [`skills/yi-reading/REFERENCE.md`](skills/yi-reading/REFERENCE.md)。
+Sources and reasoning: [`skills/yi-reading/REFERENCE.md`](skills/yi-reading/REFERENCE.md)
+(in Chinese).
 
-## 注家
+## Commentaries
 
-三家全本，六十四卦一卦不缺，皆取自维基文库的四库全书本：
+All three, complete, all 64 hexagrams, from the Siku Quanshu editions on
+Chinese Wikisource:
 
-| 注家 | 卷次 | 说明 |
+| Commentator | Juan | Note |
 |---|---|---|
-| 苏轼《东坡易传》 | 卷 1–6 | 第 1–35 卦另有带标点的子页，优先用 |
-| 程颐《伊川易传》 | 卷 1–4 | 四库本，无标点 |
-| 朱熹《周易本义》 | 卷 1–2 | 四库本，无标点 |
+| Su Shi 蘇軾, *Dongpo Yizhuan* | 1–6 | Hexagrams 1–35 also exist as punctuated subpages; those are preferred |
+| Cheng Yi 程頤, *Yichuan Yizhuan* | 1–4 | Siku edition, unpunctuated |
+| Zhu Xi 朱熹, *Zhouyi Benyi* | 1–2 | Siku edition, unpunctuated |
 
-四库本没有标点，所以引它时取短句，长段落用自己的话讲。异体字极多
-（光一个「兌」就有 兌／兑／兊 三种写法），所以切分按卦画而不按卦名。
-`□` 是原扫描本字库外的缺字，照留不猜补。
+The Siku editions carry no punctuation, so quotations from them are kept short
+and anything longer is paraphrased in the skill's own voice. Variant characters
+are everywhere — 兌 alone appears as 兌, 兑 and 兊 — which is why the text is
+split by hexagram *diagram* rather than by name. A `□` marks a character absent
+from the scan's font; it is left as is and never guessed at.
 
-## 已知缺口
+## Known gaps
 
-- 大衍筮法未实现（接口预留）。默认金钱卦——荣格为《易经》英译本起卦用的就是硬币
-- 内置那 64 张图不带动爻记号（2⁶ 种组合没法预生成）；有动爻时临时渲一张，需要 `rsvg-convert`，没有就退回无记号的那张并说明
+- The yarrow-stalk method is not implemented (the interface is reserved). The
+  default is the coin method — which is what Jung used when he cast for the
+  Wilhelm/Baynes edition
+- The 64 built-in images carry no moving-line marks, since 2⁶ combinations
+  cannot be pre-generated. When a line moves, one image is rendered on the spot;
+  that needs `rsvg-convert`, and without it the skill falls back to the unmarked
+  image and says so
 
-## 文本来源与授权
+## Text sources and licence
 
-**经文与三家注都是公有领域**——《周易》经传成于先秦，苏轼、程颐、朱熹皆宋人。
-本仓库收录的转录本取自**维基文库**（每个数据文件里都带 `source_url`），
-维基文库的转录以 CC BY-SA 4.0 提供，沿用时请保留出处。
-六十四张卦象图由 `scripts/render_hexagrams.py` 生成，不涉第三方素材。
+**The classic and all three commentaries are in the public domain** — the
+*Zhouyi* and its wings are pre-Qin, and Su Shi, Cheng Yi and Zhu Xi were all
+Song-dynasty writers. The transcriptions bundled here come from **Chinese
+Wikisource** (every data file carries its own `source_url`), which publishes
+under CC BY-SA 4.0; keep the attribution if you reuse them. The 64 hexagram
+images are generated by `scripts/render_hexagrams.py` and involve no
+third-party assets.
 
-抓取一律走 MediaWiki API，节流重试；ctext.org 对自动访问弹验证码，
-不是可用来源，也不去绕过。
+The code is MIT licensed — see [LICENSE](LICENSE).
