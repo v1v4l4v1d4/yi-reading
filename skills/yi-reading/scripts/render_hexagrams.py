@@ -12,8 +12,11 @@ SVG 是样式的源，PNG 由它转出（飞书图片接口要位图）。改风
 内置的 64 张是无动爻的本相；动爻是 2⁶ 种组合，不可能预先穷举，
 所以有动爻时临时渲染一张——不过是画六条线加两个记号，成本可以忽略。
 
-PNG 转换依赖 rsvg-convert（brew install librsvg）。没有它就只出 SVG 并如实报告，
-不静默跳过——少一张图，占到那一卦就发不出东西。
+**只有构建期需要 rsvg-convert**（brew install librsvg）：把 64 张底图从 SVG 转成 PNG。
+没有它就只出 SVG 并如实报告，不静默跳过——少一张图，占到那一卦就发不出东西。
+
+**运行时不需要任何外部依赖**：带动爻记号的图是拿标准库往底图上叠两个形状画出来的
+（见 png_marks.py），不再走一次 SVG 栅格化。
 """
 
 from __future__ import annotations
@@ -24,6 +27,8 @@ import re
 import shutil
 import subprocess
 import sys
+
+import png_marks
 from pathlib import Path
 
 SKILL = Path(__file__).resolve().parent.parent
@@ -198,34 +203,45 @@ def hexagram(no: int) -> dict:
         raise ValueError(f"没有第 {no} 卦") from None
 
 
+def mark_geometry(lines: str, moving: list[int]) -> list[tuple[float, float, str]]:
+    """动爻记号的位置与形状：老阳一个圈，老阴一个叉。
+
+    与 svg() 里 moving_marks() 用的是同一套坐标——两处必须一致，
+    否则同一卦的构建期图和运行期图会把记号画在不同的爻上。测试盯住这一点。
+    """
+    out = []
+    for pos in sorted(moving):
+        row = 6 - pos  # 自下而上的爻位 → 自上而下的行号
+        cy = TOP + row * PITCH + BAR_T / 2
+        out.append((MARGIN - 46, cy, "ring" if lines[pos - 1] == "1" else "cross"))
+    return out
+
+
 def render_cast(no: int, moving: list[int], out: Path | None = None) -> Path:
-    """临时渲染一张带动爻记号的图，返回图片路径。
+    """出一张带动爻记号的图，返回图片路径。
+
+    做法是往预渲染好的底图上叠记号，只用标准库——**运行时不依赖 rsvg-convert**。
+    记号是纯几何，不需要字体，没必要为它拖进一个 SVG 渲染引擎；
+    而六爻全不动只占 (3/4)⁶ ≈ 18%，真按 SVG 那条路走，五次里有四次都得装 librsvg。
 
     无动爻时直接返回内置的那张，不做多余的事。
-    有动爻而环境里没有 rsvg-convert 时，也退回内置图——
-    少了记号总比发不出图强，但这件事要说出来，不静默降级。
     """
     h = hexagram(no)
     static = OUT_PNG / f"{no:02d}-{h['name']}.png"
     if not moving:
         return static
 
-    rsvg = shutil.which("rsvg-convert")
-    if not rsvg:
-        print(
-            "找不到 rsvg-convert，动爻记号画不出来，退回无记号的内置图"
-            "（記得在文字裏說清哪幾爻在動）。",
-            file=sys.stderr,
-        )
-        return static
-
-    # 默认落在 skill 目录内部而不是 /tmp：飞书的发图接口只收当前目录下的相对路径，
-    # 给绝对路径会被拒。放这里，`cd` 到 skill 目录后就是 ./assets/hexagrams/cast/…
-    out = out or CAST_DIR / f"{no:02d}-{h['name']}-{''.join(map(str, moving))}.png"
+    out = out or CAST_DIR / f"{no:02d}-{h['name']}-{''.join(map(str, sorted(moving)))}.png"
     out.parent.mkdir(parents=True, exist_ok=True)
-    svg_path = out.with_suffix(".svg")
-    svg_path.write_text(svg(h, moving), encoding="utf-8")
-    subprocess.run([rsvg, "-w", str(W), "-h", str(H), str(svg_path), "-o", str(out)], check=True)
+
+    width, height, pixels = png_marks.read_rgb(static)
+    ink = (int(INK[1:3], 16), int(INK[3:5], 16), int(INK[5:7], 16))
+    for cx, cy, shape in mark_geometry(h["lines"], moving):
+        if shape == "ring":
+            png_marks.draw_ring(pixels, width, height, cx, cy, 9, 2.5, ink)
+        else:
+            png_marks.draw_cross(pixels, width, height, cx, cy, 9 * 0.78, 2.5, ink)
+    png_marks.write_rgb(out, width, height, pixels)
     return out
 
 
