@@ -378,6 +378,42 @@ class TestVerifyQuote(unittest.TestCase):
             verify_quote.work_entry("dongpo", 99)
 
 
+class TestBriefCheck(unittest.TestCase):
+    """簡讀 200 字的上限。「簡明扼要」沒有判據，靠自覺守不住——所以有人數。"""
+
+    def setUp(self):
+        import brief_check
+        self.b = brief_check
+
+    def test_默認上限是二百(self):
+        self.assertEqual(self.b.DEFAULT_LIMIT, 200)
+
+    def test_中文按字數(self):
+        self.assertEqual(self.b.count("困是被壓住了動不了"), 9)
+
+    def test_標點算在內(self):
+        """中文標點本來就佔一格，不能白送。"""
+        self.assertEqual(self.b.count("困，是被壓住了。"), 8)
+
+    def test_空白與換行不算(self):
+        self.assertEqual(self.b.count("困 是\n被壓住了"), self.b.count("困是被壓住了"))
+
+    def test_markdown_標記不算(self):
+        self.assertEqual(self.b.count("**困**是`被壓住`了"), self.b.count("困是被壓住了"))
+
+    def test_一串拉丁記一個字(self):
+        """否則一個 verify_quote.py 就吃掉十五個額度；但也不能白送，記一個。"""
+        self.assertEqual(self.b.count("跑 verify_quote.py 看看"), 4)  # 跑 + 一串 + 看看
+        self.assertEqual(self.b.count("GPT-5.6"), 1)
+        self.assertEqual(self.b.count("用 A 和 B"), 4)
+
+    def test_邊界(self):
+        self.assertEqual(self.b.count(""), 0)
+        exactly = "字" * 200
+        self.assertEqual(self.b.count(exactly), 200)
+        self.assertEqual(self.b.count(exactly + "字"), 201)
+
+
 class TestAssets(unittest.TestCase):
     """64 張卦象圖與經文表必須一一對上。缺一張，占到它就發不出圖。"""
 
