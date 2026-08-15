@@ -1,10 +1,10 @@
 # AGENTS.md
 
-給在這個倉庫裏幹活的 agent。
+给在这个仓库里干活的 agent。
 
-## 這是什麼
+## 这是什么
 
-一個 `npx skills` 標準 skills 倉庫。目前只有一個 skill：`skills/yi-reading/`。
+一个 `npx skills` 标准 skills 仓库。目前只有一个 skill：`skills/yi-reading/`。
 
 ```
 README.md              倉庫說明
@@ -21,35 +21,35 @@ skills/
     assets/hexagrams/  64 張 PNG（svg/ 下為源）
 ```
 
-## 四條不能破的規矩
+## 四条不能破的规矩
 
-**1. 隨機源是 `secrets`。** `cast.py` 裏不許出現 `import random`。
-可復現的偽隨機與共時性互斥——這是這個項目的立足點，不是風格偏好。
-`tests/test_yi.py::TestRandomSource` 有靜態檢查。
+**1. 随机源是 `secrets`。** `cast.py` 里不许出现 `import random`。
+可复现的伪随机与共时性互斥——这是这个项目的立足点，不是风格偏好。
+`tests/test_yi.py::TestRandomSource` 有静态检查。
 
-**2. 引誰的話必須真是誰的話。** 這條有機器判據，不靠自覺：
-`verify_quote.py` 要求引文是庫中原文的逐字子串（`--any` 還會報出處）。
-三家注各 64 卦，測試逐卦查文件在不在、卷次對不對、有沒有模板殘留。
-**轉述不署名**——要麼真引，要麼別掛在注家名下。
+**2. 引谁的话必须真是谁的话。** 这条有机器判据，不靠自觉：
+`verify_quote.py` 要求引文是库中原文的逐字子串（`--any` 还会报出处）。
+三家注各 64 卦，测试逐卦查文件在不在、卷次对不对、有没有模板残留。
+**转述不署名**——要么真引，要么别挂在注家名下。
 
-**3. 卦畫數據不手抄。** 六爻與卦名的對應無法肉眼校對。
-要改就改 `build_table.py`（從八卦符號推導＋結構不變量自校驗），
-不要直接編輯 `hexagrams.json` 裏的 `lines`。
+**3. 卦画数据不手抄。** 六爻与卦名的对应无法肉眼校对。
+要改就改 `build_table.py`（从八卦符号推导＋结构不变量自校验），
+不要直接编辑 `hexagrams.json` 里的 `lines`。
 
-**4. 數據與圖必須待在 `skills/yi-reading/` 內部。**
-`npx skills add` 只安裝 `skills/<name>/` 這個目錄；挪到倉庫根，
-skill 裝到用戶機器上就是壞的。
+**4. 数据与图必须待在 `skills/yi-reading/` 内部。**
+`npx skills add` 只安装 `skills/<name>/` 这个目录；挪到仓库根，
+skill 装到用户机器上就是坏的。
 
-## 改動之後
+## 改动之后
 
 ```bash
 python3 -m unittest discover -s tests
 ```
 
-62 個測試，只用標準庫，跑完不到一秒。**斷卦邏輯改了必須全綠再提交**
-——考變占選錯句子不會報錯，輸出照樣通順，沒有任何外部信號。
+62 个测试，只用标准库，跑完不到一秒。**断卦逻辑改了必须全绿再提交**
+——考变占选错句子不会报错，输出照样通顺，没有任何外部信号。
 
-改數據或圖：
+改数据或图：
 
 ```bash
 python3 skills/yi-reading/scripts/build_table.py            # → data/_table.json
@@ -58,14 +58,14 @@ python3 skills/yi-reading/scripts/fetch_commentary.py       # → data/commentar
 python3 skills/yi-reading/scripts/render_hexagrams.py       # → assets/（需 rsvg-convert）
 ```
 
-抓取一律走 MediaWiki API，不解析 HTML。ctext.org 對自動訪問彈驗證碼，
-不是可用來源，也不要去繞過。
+抓取一律走 MediaWiki API，不解析 HTML。ctext.org 对自动访问弹验证码，
+不是可用来源，也不要去绕过。
 
-**判定「某個源不存在」之前，先用 `list=allpages&apprefix=` 把命名空間枚舉一遍。**
-這個坑踩過兩次：先是只驗了 `東坡易傳/01` 就斷言 64 卦齊全，
-後是只看了那套子頁就斷言只有 35 卦——兩次都是拿樣本當全集。
+**判定「某个源不存在」之前，先用 `list=allpages&apprefix=` 把命名空间枚举一遍。**
+这个坑踩过两次：先是只验了 `東坡易傳/01` 就断言 64 卦齐全，
+后是只看了那套子页就断言只有 35 卦——两次都是拿样本当全集。
 
 ## 新增 skill
 
-放在 `skills/<name>/`，帶 `SKILL.md`（frontmatter 需 `name` 與 `description`），
-然後在 `skills.sh.json` 的分組裏登記。
+放在 `skills/<name>/`，带 `SKILL.md`（frontmatter 需 `name` 与 `description`），
+然后在 `skills.sh.json` 的分组里登记。

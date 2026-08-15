@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
-"""構建期工具：抓三家易注，按卦切分入庫。
+"""构建期工具：抓三家易注，按卦切分入库。
 
-三家都有完整的四庫全書本在維基文庫，六十四卦一卦不缺：
+三家都有完整的四库全书本在维基文库，六十四卦一卦不缺：
 
-    蘇軾《東坡易傳》   卷 1–6（卷 7–9 為繫辭、說卦等，不在此列）
-    程頤《伊川易傳》   卷 1–4
-    朱熹《周易本義》   卷 1–2（卷 3–4 為繫辭以下）
+    苏轼《东坡易传》   卷 1–6（卷 7–9 为系辞、说卦等，不在此列）
+    程颐《伊川易传》   卷 1–4
+    朱熹《周易本义》   卷 1–2（卷 3–4 为系辞以下）
 
-第一版只抓到帶標點的《東坡易傳》子頁（僅 1–35 卦），據此判定「只能引一半」——
-那是**找得不夠**，不是來源不全。四庫本就在隔壁，一直都在。
+第一版只抓到带标点的《东坡易传》子页（仅 1–35 卦），据此判定「只能引一半」——
+那是**找得不够**，不是来源不全。四库本就在隔壁，一直都在。
 
-四庫本的代價是**無標點**。所以《東坡易傳》1–35 卦仍優先用帶標點的維基文庫本，
-其餘一律四庫本；每個文件記下自己是哪個本子、在第幾卷，引用時好註出處。
+四库本的代价是**无标点**。所以《东坡易传》1–35 卦仍优先用带标点的维基文库本，
+其余一律四库本；每个文件记下自己是哪个本子、在第几卷，引用时好注出处。
 
-切分依據是每卦開頭的 `{{SKchar|NNNN}}{{SK notes|震下坎上}}` 標記——
-由上下卦反查卦序，再斷言全書恰好覆蓋 1..64 且次序單調。
-不靠卦名匹配：四庫本用了大量異體字（兌寫作兑、兊，无咎寫作元咎），
-按名字對必然漏，按卦畫對不會。
+切分依据是每卦开头的 `{{SKchar|NNNN}}{{SK notes|震下坎上}}` 标记——
+由上下卦反查卦序，再断言全书恰好覆盖 1..64 且次序单调。
+不靠卦名匹配：四库本用了大量异体字（兑写作兑、兊，无咎写作元咎），
+按名字对必然漏，按卦画对不会。
 
 用法：python3 fetch_commentary.py [--work dongpo|yichuan|benyi]
 """
@@ -41,7 +41,7 @@ WORKS = {
         "title": "東坡易傳",
         "author": "蘇軾",
         "juan": range(1, 7),
-        # 帶標點的維基文庫子頁只到第 35 卦；有則優先，其餘用四庫本
+        # 带标点的维基文库子页只到第 35 卦；有则优先，其余用四库本
         "punctuated_subpages": range(1, 36),
     },
     "yichuan": {"title": "伊川易傳", "author": "程頤", "juan": range(1, 5)},
@@ -50,7 +50,7 @@ WORKS = {
 
 BITS = {"乾": "111", "兌": "110", "離": "101", "震": "100",
         "巽": "011", "坎": "010", "艮": "001", "坤": "000"}
-# 四庫本的異體寫法。兌一個字就有三種寫法，這正是不能按卦名切分的理由。
+# 四库本的异体写法。兑一个字就有三种写法，这正是不能按卦名切分的理由。
 VARIANTS = {"兑": "兌", "兊": "兌", "离": "離", "㢲": "巽", "刋": "巽"}
 TRIGRAM_CLASS = "[" + "".join(sorted(set(BITS) | set(VARIANTS))) + "]"
 HEX_MARK = re.compile(
@@ -69,7 +69,7 @@ def wikitext(title: str) -> str:
             with urllib.request.urlopen(req, timeout=60) as r:
                 page = list(json.load(r)["query"]["pages"].values())[0]
             break
-        except urllib.error.HTTPError as exc:  # 維基對連續請求會 429，退避重試
+        except urllib.error.HTTPError as exc:  # 维基对连续请求会 429，退避重试
             if exc.code != 429 or attempt == 4:
                 raise
             time.sleep(5 * (attempt + 1))
@@ -79,11 +79,11 @@ def wikitext(title: str) -> str:
 
 
 def clean_skqs(s: str) -> tuple[str, int]:
-    """把四庫本頁面清成正文。返回 (正文, 缺字數)。
+    """把四库本页面清成正文。返回 (正文, 缺字数)。
 
-    `{{SK anchor|…}}` 是掃描頁的導航錨點，內容與正文重複，去掉。
-    `{{SK notes|…}}` 是雙行小注——在《周易本義》裏它就是朱熹的注本身，
-    內容必須留下。`{{SKchar|N}}` 是字庫外的字，留一個 □ 佔位，如實計數。
+    `{{SK anchor|…}}` 是扫描页的导航锚点，内容与正文重复，去掉。
+    `{{SK notes|…}}` 是双行小注——在《周易本义》里它就是朱熹的注本身，
+    内容必须留下。`{{SKchar|N}}` 是字库外的字，留一个 □ 占位，如实计数。
     """
     s = re.sub(r"<!--.*?-->", "", s, flags=re.S)
     s = re.sub(r"\{\{SKQS header[^}]*\}\}", "", s)
@@ -105,7 +105,7 @@ def trigram(ch: str) -> str:
 
 
 def split_juan(raw: str, by_lines: dict) -> list[tuple[int, str]]:
-    """把一卷切成 [(卦序, 該卦全文), …]，次序即原書次序。"""
+    """把一卷切成 [(卦序, 该卦全文), …]，次序即原书次序。"""
     marks = list(HEX_MARK.finditer(raw))
     out = []
     for i, m in enumerate(marks):
@@ -136,8 +136,8 @@ def fetch_work(slug: str, by_lines: dict, names: dict) -> dict:
             order.append(no)
         print(f"  {title} → {len([n for n in order if juan_of[n] == j])} 卦", file=sys.stderr)
 
-    # 全書恰好覆蓋 1..64，且次序單調。任一條不成立，說明切分規則漏了某種寫法，
-    # 這時寧可失敗也不要靜默少一卦——少的那一卦占到了就沒注可引。
+    # 全书恰好覆盖 1..64，且次序单调。任一条不成立，说明切分规则漏了某种写法，
+    # 这时宁可失败也不要静默少一卦——少的那一卦占到了就没注可引。
     assert order == sorted(order), f"{slug}: 卦序非單調，切分有誤"
     assert sorted(order) == list(range(1, 65)), (
         f"{slug}: 覆蓋不全，缺 {sorted(set(range(1, 65)) - set(order))}"
@@ -150,7 +150,7 @@ def fetch_work(slug: str, by_lines: dict, names: dict) -> dict:
             f"https://zh.wikisource.org/wiki/{spec['title']} (四庫全書本)/卷{juan_of[no]}"
         )
         if no in spec.get("punctuated_subpages", ()):
-            # 帶標點的本子好讀好引，有就優先
+            # 带标点的本子好读好引，有就优先
             punct = clean_punctuated(wikitext(f"{spec['title']}/{no:02d}"))
             if len(punct) > 200:
                 text, edition = punct, "維基文庫標點本"
@@ -188,7 +188,7 @@ FURNITURE = re.compile(r"^(?:\||\}\}|\{\{|[乾兌離震巽坎艮坤幹][上下]|
 
 
 def clean_punctuated(wt: str) -> str:
-    """帶標點的《東坡易傳》子頁：清掉模板與版面字，只留正文。"""
+    """带标点的《东坡易传》子页：清掉模板与版面字，只留正文。"""
     def one(s: str) -> str:
         s = re.sub(r"-\{(?:[a-zA-Z-]+:)?([^}|]*)\}-", r"\1", s)
         s = re.sub(r"<ref[^>]*>.*?</ref>|<ref[^>]*/>", "", s, flags=re.S)

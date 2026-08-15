@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""yi-reading 的回歸測試。只用標準庫：`python3 -m unittest discover tests`。
+"""yi-reading 的回归测试。只用标准库：`python3 -m unittest discover tests`。
 
-這些測試守的是同一件事：**錯了也看不出來的錯**。
-卦畫錯一位、斷卦選錯一句、隨機源被換成 random——輸出照樣通順、照樣像那麼回事，
-沒有任何外部信號提示。所以判據必須是機器可執行的，不能靠讀一遍覺得對。
+这些测试守的是同一件事：**错了也看不出来的错**。
+卦画错一位、断卦选错一句、随机源被换成 random——输出照样通顺、照样像那么回事，
+没有任何外部信号提示。所以判据必须是机器可执行的，不能靠读一遍觉得对。
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ def load(path: Path):
 
 
 class TestHexagramTable(unittest.TestCase):
-    """六爻 → 卦序的映射。手抄這張表必錯，所以全覆蓋校驗。"""
+    """六爻 → 卦序的映射。手抄这张表必错，所以全覆盖校验。"""
 
     @classmethod
     def setUpClass(cls):
@@ -46,7 +46,7 @@ class TestHexagramTable(unittest.TestCase):
         self.assertEqual(pats, {f"{i:06b}" for i in range(64)})
 
     def test_anchors(self):
-        """獨立已知的錨點。寫 SPEC 時我在屯和未濟上各錯過一次，就是靠這一條發現的。"""
+        """独立已知的锚点。写 SPEC 时我在屯和未济上各错过一次，就是靠这一条发现的。"""
         want = {
             1: "111111", 2: "000000", 3: "100010", 4: "010001",
             11: "111000", 12: "000111", 29: "010010", 30: "101101",
@@ -57,7 +57,7 @@ class TestHexagramTable(unittest.TestCase):
             self.assertEqual(by_no[no]["lines"], lines, f"第 {no} 卦 {by_no[no]['name']}")
 
     def test_king_wen_pair_invariant(self):
-        """序卦兩兩成對：後者是前者的反覆；反覆與自身相同時取其錯（旁通）。"""
+        """序卦两两成对：后者是前者的反复；反复与自身相同时取其错（旁通）。"""
         by_no = {r["no"]: r for r in self.rows}
         for k in range(1, 33):
             a, b = by_no[2 * k - 1]["lines"], by_no[2 * k]["lines"]
@@ -97,12 +97,12 @@ class TestCast(unittest.TestCase):
         self.assertEqual(cast_mod.FOUR_SYMBOLS[9], ("老陽", "1", True))
 
     def test_硬幣約定寫死(self):
-        """背 3 陽、字 2 陰。這個約定一翻，老陰老陽整體對調，卦全錯而不報錯。"""
+        """背 3 阳、字 2 阴。这个约定一翻，老阴老阳整体对调，卦全错而不报错。"""
         self.assertEqual((cast_mod.BEI, cast_mod.ZI), (3, 2))
         self.assertEqual({cast_mod.toss_coin() for _ in range(200)}, {2, 3})
 
     def test_自下而上(self):
-        """第一擲是初爻。屯 100010：初九動、六四動 → 之卦萃。"""
+        """第一掷是初爻。屯 100010：初九动、六四动 → 之卦萃。"""
         r = cast_mod.cast([9, 8, 8, 6, 7, 8])
         self.assertEqual(r["primary"]["lines"], "100010")
         self.assertEqual(r["primary"]["no"], 3)
@@ -132,7 +132,7 @@ class TestCast(unittest.TestCase):
 
 
 class TestRandomSource(unittest.TestCase):
-    """隨機源必須是 secrets。random 可復現，用它做共時性占卜是自我拆台。"""
+    """随机源必须是 secrets。random 可复现，用它做共时性占卜是自我拆台。"""
 
     def test_cast_不引入_random(self):
         src = (SKILL / "scripts" / "cast.py").read_text(encoding="utf-8")
@@ -141,7 +141,7 @@ class TestRandomSource(unittest.TestCase):
         self.assertIsNotNone(re.search(r"^\s*import\s+secrets\b", src, re.M))
 
     def test_分布(self):
-        """蒙特卡洛：老陽 1/8、少陰 3/8、少陽 3/8、老陰 1/8，各差 ≤1 個百分點。"""
+        """蒙特卡洛：老阳 1/8、少阴 3/8、少阳 3/8、老阴 1/8，各差 ≤1 个百分点。"""
         n = 100_000
         counts = collections.Counter(sum(cast_mod.toss_coin() for _ in range(3)) for _ in range(n))
         for value, expect in ((6, 0.125), (7, 0.375), (8, 0.375), (9, 0.125)):
@@ -154,39 +154,39 @@ class TestRandomSource(unittest.TestCase):
 
 
 class TestKaobianzhan(unittest.TestCase):
-    """考變占七條。這一步錯了，後面所有話都跟著錯，且沒有任何外部信號。"""
+    """考变占七条。这一步错了，后面所有话都跟著错，且没有任何外部信号。"""
 
     def read(self, values):
-        """只走起卦與斷卦，繞開發圖——這裏測的是選句子，不是渲染。
-        （繞開也順帶讓這批用例不依賴 rsvg-convert，且快兩個數量級。）"""
+        """只走起卦与断卦，绕开发图——这里测的是选句子，不是渲染。
+        （绕开也顺带让这批用例不依赖 rsvg-convert，且快两个数量级。）"""
         c = cast_mod.cast(values)
         primary = cast_mod.by_lines(c["primary"]["lines"])
         relating = cast_mod.by_lines(c["relating"]["lines"]) if c["relating"] else None
         return reading_mod.select(primary, c["moving"], relating)
 
     def test_零爻變讀本卦卦辭(self):
-        j = self.read([8, 7, 8, 7, 8, 7])  # 未濟，六爻不動
+        j = self.read([8, 7, 8, 7, 8, 7])  # 未济，六爻不动
         self.assertEqual(j["moving_count"], 0)
         self.assertEqual([r["kind"] for r in j["readings"]], ["卦辭"])
         self.assertEqual(j["readings"][0]["hexagram_no"], 64)
-        self.assertIn("貞", j["why"])  # 內卦為貞、外卦為悔
+        self.assertIn("貞", j["why"])  # 内卦为贞、外卦为悔
 
     def test_一爻變讀本卦該爻(self):
-        j = self.read([9, 8, 8, 7, 8, 8])  # 震，初九動
+        j = self.read([9, 8, 8, 7, 8, 8])  # 震，初九动
         self.assertEqual(j["moving_count"], 1)
         self.assertEqual(len(j["readings"]), 1)
         r = j["readings"][0]
         self.assertEqual((r["kind"], r["hexagram_no"], r["pos"], r["title"]), ("爻辭", 51, 1, "初九"))
 
     def test_二爻變以上爻為主(self):
-        j = self.read([9, 8, 8, 6, 7, 8])  # 屯，初九、六四動
+        j = self.read([9, 8, 8, 6, 7, 8])  # 屯，初九、六四动
         self.assertEqual(j["moving_count"], 2)
         主, 輔 = j["readings"]
         self.assertEqual((主["role"], 主["pos"], 主["hexagram_no"]), ("主", 4, 3))
         self.assertEqual((輔["role"], 輔["pos"], 輔["hexagram_no"]), ("輔", 1, 3))
 
     def test_三爻變前十卦主貞(self):
-        j = self.read([9, 9, 9, 8, 8, 8])  # 泰 → 坤，動爻 (1,2,3) 列第 1 位
+        j = self.read([9, 9, 9, 8, 8, 8])  # 泰 → 坤，动爻 (1,2,3) 列第 1 位
         self.assertEqual(j["moving_count"], 3)
         主, 輔 = j["readings"]
         self.assertEqual([r["kind"] for r in j["readings"]], ["卦辭", "卦辭"])
@@ -194,7 +194,7 @@ class TestKaobianzhan(unittest.TestCase):
         self.assertEqual((輔["role"], 輔["hexagram_no"]), ("輔", 2))  # 之卦
 
     def test_三爻變後十卦主悔(self):
-        j = self.read([8, 9, 9, 9, 8, 8])  # 動爻 (2,3,4) 列第 11 位
+        j = self.read([8, 9, 9, 9, 8, 8])  # 动爻 (2,3,4) 列第 11 位
         主, 輔 = j["readings"]
         self.assertEqual(主["role"], "主")
         self.assertGreater(reading_mod.triple_rank([2, 3, 4]), 10)
@@ -204,8 +204,8 @@ class TestKaobianzhan(unittest.TestCase):
         self.assertEqual(輔["hexagram_no"], 本)
 
     def test_變卦圖次序的四個錨點(self):
-        """《易學啟蒙通釋》：乾三爻變「自否至恒為前十卦，自益至泰為後十卦」；
-        坤三爻變「自泰至益為前十卦，自恒至否為後十卦」。四個錨點釘死這個排序。"""
+        """《易学启蒙通释》：乾三爻变「自否至恒为前十卦，自益至泰为后十卦」；
+        坤三爻变「自泰至益为前十卦，自恒至否为后十卦」。四个锚点钉死这个排序。"""
         def 之卦(本: str, moving) -> int:
             bits = list(本)
             for p in moving:
@@ -215,7 +215,7 @@ class TestKaobianzhan(unittest.TestCase):
         乾, 坤 = "111111", "000000"
         self.assertEqual(之卦(乾, reading_mod.TRIPLES[0]), 12)   # 否
         self.assertEqual(之卦(乾, reading_mod.TRIPLES[9]), 32)   # 恒 ← 前十之末
-        self.assertEqual(之卦(乾, reading_mod.TRIPLES[10]), 42)  # 益 ← 後十之首
+        self.assertEqual(之卦(乾, reading_mod.TRIPLES[10]), 42)  # 益 ← 后十之首
         self.assertEqual(之卦(乾, reading_mod.TRIPLES[19]), 11)  # 泰
         self.assertEqual(之卦(坤, reading_mod.TRIPLES[0]), 11)   # 泰
         self.assertEqual(之卦(坤, reading_mod.TRIPLES[9]), 42)   # 益
@@ -227,7 +227,7 @@ class TestKaobianzhan(unittest.TestCase):
         self.assertEqual(seen, set(range(1, 21)))
 
     def test_四爻變讀之卦二不變爻以下爻為主(self):
-        j = self.read([9, 9, 9, 9, 7, 8])  # 夬 → 比，不變爻為五、上
+        j = self.read([9, 9, 9, 9, 7, 8])  # 夬 → 比，不变爻为五、上
         self.assertEqual(j["moving_count"], 4)
         主, 輔 = j["readings"]
         self.assertEqual((主["role"], 主["pos"], 主["hexagram_no"]), ("主", 5, 8))
@@ -235,7 +235,7 @@ class TestKaobianzhan(unittest.TestCase):
         self.assertTrue(all(r["hexagram_no"] == 8 for r in j["readings"]), "須讀之卦")
 
     def test_五爻變讀之卦唯一不變爻(self):
-        j = self.read([9, 8, 9, 9, 9, 9])  # 只有第 2 爻不動
+        j = self.read([9, 8, 9, 9, 9, 9])  # 只有第 2 爻不动
         self.assertEqual(j["moving_count"], 5)
         self.assertEqual(len(j["readings"]), 1)
         r = j["readings"][0]
@@ -253,13 +253,13 @@ class TestKaobianzhan(unittest.TestCase):
         self.assertEqual(j["readings"][0]["text"], "用六：利永貞。")
 
     def test_六爻變餘卦讀之卦卦辭(self):
-        j = self.read([6, 9, 9, 9, 9, 9])  # 姤 → 復
+        j = self.read([6, 9, 9, 9, 9, 9])  # 姤 → 复
         self.assertEqual(j["moving_count"], 6)
         self.assertEqual(j["readings"][0]["kind"], "卦辭")
         self.assertEqual(j["readings"][0]["hexagram_no"], 24)
 
     def test_每個分支都給出理由(self):
-        """第五步要把「為什麼讀這一句」講給用戶聽，所以 why 不能為空。"""
+        """第五步要把「为什么读这一句」讲给用户听，所以 why 不能为空。"""
         for values in ([7] * 6, [9] + [7] * 5, [9, 9] + [7] * 4, [9] * 3 + [7] * 3,
                        [9] * 4 + [7] * 2, [9] * 5 + [7], [9] * 6):
             j = self.read(values)
@@ -268,7 +268,7 @@ class TestKaobianzhan(unittest.TestCase):
             self.assertEqual(j["rule_source"], "朱熹《易學啟蒙·考變占》")
 
     def test_窮舉所有動爻組合不崩(self):
-        """2^6 = 64 種動爻組合全跑一遍：任何一種都必須選得出句子。"""
+        """2^6 = 64 种动爻组合全跑一遍：任何一种都必须选得出句子。"""
         for mask in range(64):
             values = [9 if mask >> i & 1 else 7 for i in range(6)]
             j = self.read(values)
@@ -279,7 +279,7 @@ class TestKaobianzhan(unittest.TestCase):
 
 
 class TestCommentary(unittest.TestCase):
-    """三家注：六十四卦一卦不缺，每卦都能報出處。占到哪一卦都得有東西可引。"""
+    """三家注：六十四卦一卦不缺，每卦都能报出处。占到哪一卦都得有东西可引。"""
 
     WORKS = ("dongpo", "yichuan", "benyi")
 
@@ -307,7 +307,7 @@ class TestCommentary(unittest.TestCase):
                 self.assertEqual(d["name"], self.rows[no]["name"], f"{slug} 第 {no} 卦")
 
     def test_出處齊備且卷次合理(self):
-        """引用要括注到卷，所以 citation 與 juan 必須齊、必須對得上。"""
+        """引用要括注到卷，所以 citation 与 juan 必须齐、必须对得上。"""
         limits = {"dongpo": 6, "yichuan": 4, "benyi": 2}
         for slug in self.WORKS:
             for no in range(1, 65):
@@ -318,14 +318,14 @@ class TestCommentary(unittest.TestCase):
                 self.assertIn("zh.wikisource.org", d["source_url"])
 
     def test_卷次隨卦序單調(self):
-        """卦序往後走，卷次只能不減。一旦回頭，說明切分把某卦歸錯了卷。"""
+        """卦序往后走，卷次只能不减。一旦回头，说明切分把某卦归错了卷。"""
         for slug in self.WORKS:
             juan = [load(SKILL / "data" / "commentary" / slug / f"{n:02d}.json")["juan"]
                     for n in range(1, 65)]
             self.assertEqual(juan, sorted(juan), slug)
 
     def test_沒有模板殘留(self):
-        """曾經有 14 個頁面把 {{header}} 的參數行當正文抓了進來。"""
+        """曾经有 14 个页面把 {{header}} 的参数行当正文抓了进来。"""
         for slug in self.WORKS:
             for no in range(1, 65):
                 text = load(SKILL / "data" / "commentary" / slug / f"{no:02d}.json")["text"]
@@ -342,7 +342,7 @@ class TestCommentary(unittest.TestCase):
             self.assertTrue(c["citation"] and c["author"] and c["text"])
 
     def test_後半段的卦也有蘇注(self):
-        """第一版只有 1–35 卦，占到後面就沒得引。這一條盯住那個缺口不再出現。"""
+        """第一版只有 1–35 卦，占到后面就没得引。这一条盯住那个缺口不再出现。"""
         for no in (36, 47, 54, 64):
             c = next(x for x in reading_mod.commentary([no])[0]["commentators"]
                      if x["slug"] == "dongpo")
@@ -350,8 +350,8 @@ class TestCommentary(unittest.TestCase):
 
 
 class TestVerifyQuote(unittest.TestCase):
-    """語言模型寫一段像蘇軾的話，比引對一段真的蘇軾容易得多，而讀者分不出來。
-    所以「引誰的話必須真是誰的話」不能靠自覺，要有judge得了的判據。"""
+    """语言模型写一段像苏轼的话，比引对一段真的苏轼容易得多，而读者分不出来。
+    所以「引谁的话必须真是谁的话」不能靠自觉，要有judge得了的判据。"""
 
     def test_原文通過(self):
         self.assertTrue(verify_quote.verify("因世之“屯”，而務往以求功", verify_quote.dongpo_text(3)))
@@ -379,7 +379,7 @@ class TestVerifyQuote(unittest.TestCase):
 
 
 class TestBriefCheck(unittest.TestCase):
-    """簡讀 200 字的上限。「簡明扼要」沒有判據，靠自覺守不住——所以有人數。"""
+    """简读 200 字的上限。「简明扼要」没有判据，靠自觉守不住——所以有人数。"""
 
     def setUp(self):
         import brief_check
@@ -392,7 +392,7 @@ class TestBriefCheck(unittest.TestCase):
         self.assertEqual(self.b.count("困是被壓住了動不了"), 9)
 
     def test_標點算在內(self):
-        """中文標點本來就佔一格，不能白送。"""
+        """中文标点本来就占一格，不能白送。"""
         self.assertEqual(self.b.count("困，是被壓住了。"), 8)
 
     def test_空白與換行不算(self):
@@ -402,7 +402,7 @@ class TestBriefCheck(unittest.TestCase):
         self.assertEqual(self.b.count("**困**是`被壓住`了"), self.b.count("困是被壓住了"))
 
     def test_一串拉丁記一個字(self):
-        """否則一個 verify_quote.py 就吃掉十五個額度；但也不能白送，記一個。"""
+        """否则一个 verify_quote.py 就吃掉十五个额度；但也不能白送，记一个。"""
         self.assertEqual(self.b.count("跑 verify_quote.py 看看"), 4)  # 跑 + 一串 + 看看
         self.assertEqual(self.b.count("GPT-5.6"), 1)
         self.assertEqual(self.b.count("用 A 和 B"), 4)
@@ -415,7 +415,7 @@ class TestBriefCheck(unittest.TestCase):
 
 
 class TestAssets(unittest.TestCase):
-    """64 張卦象圖與經文表必須一一對上。缺一張，占到它就發不出圖。"""
+    """64 张卦象图与经文表必须一一对上。缺一张，占到它就发不出图。"""
 
     def setUp(self):
         self.dir = SKILL / "assets" / "hexagrams"
@@ -434,20 +434,20 @@ class TestAssets(unittest.TestCase):
 
 
 class TestMovingMarks(unittest.TestCase):
-    """動爻記號畫錯位置，圖上就會指着另一條爻說它在動——而且看不出來。"""
+    """动爻记号画错位置，图上就会指着另一条爻说它在动——而且看不出来。"""
 
     def setUp(self):
         import render_hexagrams
         self.r = render_hexagrams
 
     def test_老陽記圈老陰記叉(self):
-        marks = self.r.moving_marks("100010", [1, 4])  # 屯：初九陽動、六四陰動
+        marks = self.r.moving_marks("100010", [1, 4])  # 屯：初九阳动、六四阴动
         self.assertEqual(len(marks), 2)
         self.assertIn("<circle", marks[0], "初九是陽爻，該記 ○")
         self.assertIn("<path", marks[1], "六四是陰爻，該記 ×")
 
     def test_記號對準所指的那一爻(self):
-        """爻位自下而上，圖自上而下畫。這個翻轉錯了，記號會整體上下顛倒。"""
+        """爻位自下而上，图自上而下画。这个翻转错了，记号会整体上下颠倒。"""
         import re
         for pos in range(1, 7):
             mark = self.r.moving_marks("111111", [pos])[0]

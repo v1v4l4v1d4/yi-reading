@@ -1,14 +1,14 @@
 """Build-time: fetch the classical texts and assemble data/hexagrams.json.
 
 Source, via the MediaWiki API (never by scraping rendered HTML):
-  - 經文  https://zh.wikisource.org/wiki/周易/<卦名>   卦辭、六爻辭、彖傳、大象、六小象
+  - 经文  https://zh.wikisource.org/wiki/周易/<卦名>   卦辞、六爻辞、彖传、大象、六小象
 
-The three commentaries live in fetch_commentary.py — this file is 經傳 only.
+The three commentaries live in fetch_commentary.py — this file is 经传 only.
 
 The hexagram table itself comes from build_table.py, which derives the six-line
 patterns from Unicode trigram symbols rather than transcribing them. This script
 then re-derives the trigrams a second time from the 「震下坎上」 line that the
-Wikisource 經文 pages carry, and asserts the two agree. Two independent sources
+Wikisource 经文 pages carry, and asserts the two agree. Two independent sources
 have to say the same thing before anything is written.
 
 Usage:
@@ -67,7 +67,7 @@ CN_NUM = {c: i for i, c in enumerate("〇一二三四五六七八九")}
 
 def hexagram_number(wt: str) -> int | None:
     """Read 「第三十二卦」 off a 周易 subpage. Numbering is the join key: hexagram
-    names vary between orthographies (恆/恒), the ordinal never does."""
+    names vary between orthographies (恒/恒), the ordinal never does."""
     m = re.search(r"第([一二三四五六七八九十]+)卦", clean(wt))
     if not m:
         return None
@@ -94,18 +94,18 @@ def subpage_titles() -> list[str]:
 
 
 def parse_jing(wt: str, name: str) -> dict:
-    """Pull 卦辭 / 六爻辭 / 彖 / 大象 / 六小象 out of a 周易/<卦名> page."""
+    """Pull 卦辞 / 六爻辞 / 彖 / 大象 / 六小象 out of a 周易/<卦名> page."""
     # 乾/坤 write the trigram line with variant marks: -{乾}-下-{乾}-上
     trigram_line = re.search(r"([乾兌離震巽坎艮坤])下([乾兌離震巽坎艮坤])上", clean(wt))
     if not trigram_line:
         raise ValueError(f"{name}: no 「X下Y上」 line")
 
-    # 乾 and 坤 continue into 文言傳, whose *# items would otherwise be swallowed
+    # 乾 and 坤 continue into 文言传, whose *# items would otherwise be swallowed
     # as 小象. Cut the page there.
     cut = wt.find("文言曰")
     body = wt[:cut] if cut > 0 else wt
     # 坤 breaks a line in the middle of an HTML tag ("*<span\nstyle=..."), which
-    # would hide the 「易經：」 marker from a line-by-line scan. Rejoin such tags.
+    # would hide the 「易经：」 marker from a line-by-line scan. Rejoin such tags.
     body = re.sub(r"<[^<>]*>", lambda m: m.group(0).replace("\n", " "), body)
     lines = [clean(ln) for ln in body.splitlines()]
     gua_ci, yao, tuan, da_xiang, xiao_xiang = "", [], "", "", []
@@ -127,7 +127,7 @@ def parse_jing(wt: str, name: str) -> dict:
                 continue
             (yao if section == "jing" else xiao_xiang).append(body)
         elif ln.startswith("***"):
-            # Continuation of the preceding ** line — 坤's 卦辭 and 乾/坤's 彖 run on.
+            # Continuation of the preceding ** line — 坤's 卦辞 and 乾/坤's 彖 run on.
             body = ln.lstrip("*").strip()
             if section == "jing" and gua_ci:
                 gua_ci += body
@@ -145,7 +145,7 @@ def parse_jing(wt: str, name: str) -> dict:
                 da_xiang = body
     if not (gua_ci and len(yao) == 6 and tuan and da_xiang and len(xiao_xiang) == 6):
         raise ValueError(
-            f"{name}: incomplete — 卦辭{bool(gua_ci)} 爻{len(yao)} 彖{bool(tuan)} "
+            f"{name}: incomplete — 卦辞{bool(gua_ci)} 爻{len(yao)} 彖{bool(tuan)} "
             f"大象{bool(da_xiang)} 小象{len(xiao_xiang)}"
         )
     return {
@@ -168,7 +168,7 @@ def main() -> None:
     out, failures = [], []
 
     # Index every 周易 subpage by its stated hexagram number, so titles never
-    # have to be guessed and orthographic variants (恆/恒) cannot break the join.
+    # have to be guessed and orthographic variants (恒/恒) cannot break the join.
     print("indexing 周易 subpages…", file=sys.stderr)
     by_number: dict[int, tuple[str, str]] = {}
     for title in subpage_titles():
@@ -237,7 +237,7 @@ def main() -> None:
 if __name__ == "__main__":
     if "--dongpo" in sys.argv:
         sys.exit(
-            "註解已改由 fetch_commentary.py 抓取——三家、六十四卦全。\n"
+            "注解已改由 fetch_commentary.py 抓取——三家、六十四卦全。\n"
             "這裏的 --dongpo 只會抓到 1–35 卦並覆蓋掉完整數據，故已移除。"
         )
     main()

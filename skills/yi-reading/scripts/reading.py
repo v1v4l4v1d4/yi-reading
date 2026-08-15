@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""斷卦：按朱熹《易學啟蒙·考變占》定「該讀哪一句」，並取出經文與注家原文。
+"""断卦：按朱熹《易学启蒙·考变占》定「该读哪一句」，并取出经文与注家原文。
 
-這是整條鏈路上最容易做錯、而且錯了也看不出來的一環——讀錯一句，
-後面所有話都跟著錯，且沒有任何外部信號提示。故七個分支逐條有測試。
+这是整条链路上最容易做错、而且错了也看不出来的一环——读错一句，
+后面所有话都跟著错，且没有任何外部信号提示。故七个分支逐条有测试。
 
-規則原文取自《易學啟蒙通釋》（四庫全書本）卷下，見 REFERENCE.md。
-只依賴標準庫。
+规则原文取自《易学启蒙通释》（四库全书本）卷下，见 REFERENCE.md。
+只依赖标准库。
 """
 
 from __future__ import annotations
@@ -24,8 +24,8 @@ from cast import (
     render_lines,
 )
 
-# 《易學啟蒙·考變占》七條。彖辭在此指卦下之辭（卦辭），非《彖傳》——
-# 通釋原注：「彖辭為卦下之辭」。這兩個東西同名不同物，是這一段最常見的誤讀。
+# 《易学启蒙·考变占》七条。彖辞在此指卦下之辞（卦辞），非《彖传》——
+# 通释原注：「彖辞为卦下之辞」。这两个东西同名不同物，是这一段最常见的误读。
 RULES = {
     0: "凡卦六爻皆不變，則占本卦彖辭，而以內卦為貞、外卦為悔。",
     1: "一爻變，則以本卦變爻辭占。",
@@ -46,18 +46,18 @@ RULE_NAMES = {
     6: "六爻變",
 }
 
-# 三爻變時 20 種變爻組合的次序。朱熹的變卦圖按「所變之爻」由小到大排列，
-# 前十主貞（本卦）、後十主悔（之卦）。此序可由原文反推並驗證：
-#   乾三爻變「自否至恒為前十卦，自益至泰為後十卦」——
+# 三爻变时 20 种变爻组合的次序。朱熹的变卦图按「所變之爻」由小到大排列，
+# 前十主贞（本卦）、后十主悔（之卦）。此序可由原文反推并验证：
+#   乾三爻变「自否至恒为前十卦，自益至泰为后十卦」——
 #   字典序第 10 位 (1,5,6) 正是恒，第 11 位 (2,3,4) 正是益；
-#   坤三爻變「自泰至益為前十卦，自恒至否為後十卦」——同樣吻合。
-# 兩個獨立的錨點都對上，這個排序就不是猜的。測試裏把這四個點釘死。
+#   坤三爻变「自泰至益为前十卦，自恒至否为后十卦」——同样吻合。
+# 两个独立的锚点都对上，这个排序就不是猜的。测试里把这四个点钉死。
 TRIPLES = list(itertools.combinations(range(1, 7), 3))
 assert len(TRIPLES) == 20
 
 
 def triple_rank(moving: list[int]) -> int:
-    """三條動爻在朱熹變卦圖中的次第，1..20。"""
+    """三条动爻在朱熹变卦图中的次第，1..20。"""
     return TRIPLES.index(tuple(moving)) + 1
 
 
@@ -101,7 +101,7 @@ def _yao(h: dict, pos: int, role: str, note: str = "") -> dict:
 
 
 def select(primary: dict, moving: list[int], relating: dict | None) -> dict:
-    """按考變占定該讀哪一句。primary/relating 為 hexagrams.json 的整條記錄。"""
+    """按考变占定该读哪一句。primary/relating 为 hexagrams.json 的整条记录。"""
     k = len(moving)
     readings: list[dict] = []
     why = ""
@@ -207,14 +207,14 @@ WORKS = ("dongpo", "yichuan", "benyi")
 
 
 def commentary(nos: list[int]) -> list[dict]:
-    """取三家注原文。六十四卦皆全，引用時按 citation 註出處。"""
+    """取三家注原文。六十四卦皆全，引用时按 citation 注出处。"""
     out = []
     for no in nos:
         h = _hexagram(no)
         entry = {"hexagram_no": no, "hexagram": full_name(h), "commentators": []}
         for slug in WORKS:
             path = DATA_DIR / "commentary" / slug / f"{no:02d}.json"
-            if not path.exists():  # 只該在數據沒抓全時出現
+            if not path.exists():  # 只该在数据没抓全时出现
                 entry["commentators"].append({"slug": slug, "available": False})
                 continue
             d = json.loads(path.read_text(encoding="utf-8"))
@@ -235,11 +235,11 @@ def commentary(nos: list[int]) -> list[dict]:
 
 
 def images(c: dict) -> dict:
-    """本卦與之卦該發哪張圖。本卦有動爻就臨時渲一張帶記號的，之卦一律用內置的。
+    """本卦与之卦该发哪张图。本卦有动爻就临时渲一张带记号的，之卦一律用内置的。
 
-    路徑相對 skill 目錄——飛書發圖只收當前目錄下的相對路徑，給絕對路徑會被拒。
+    路径相对 skill 目录——飞书发图只收当前目录下的相对路径，给绝对路径会被拒。
     """
-    from render_hexagrams import render_cast  # 構建期腳本，用到才導入
+    from render_hexagrams import render_cast  # 构建期脚本，用到才导入
 
     skill = DATA_DIR.parent
 
@@ -256,7 +256,7 @@ def images(c: dict) -> dict:
 
 
 def reading(values: list[int] | None = None, cast_result: dict | None = None) -> dict:
-    """起一卦並斷之。values 為重放用（六個 6/7/8/9，自下而上）。"""
+    """起一卦并断之。values 为重放用（六个 6/7/8/9，自下而上）。"""
     c = cast_result or cast(values)
     primary = by_lines(c["primary"]["lines"])
     relating = by_lines(c["relating"]["lines"]) if c["relating"] else None
@@ -309,7 +309,7 @@ def _print_human(r: dict) -> None:
         print(f"之卦　{q['unicode']} {q['full_name']}（第 {q['no']} 卦）")
         print(render_lines(q["lines"]))
     else:
-        print("\n六爻不動，無之卦。")
+        print("\n六爻不动，无之卦。")
 
     j = r["judgement"]
     print(f"\n── 斷卦：{j['rule_name']} ──")
@@ -323,11 +323,11 @@ def _print_human(r: dict) -> None:
         if x.get("note"):
             print(f"　　（{x['note']}）")
 
-    print("\n── 卦象圖 ──")
+    print("\n── 卦象图 ──")
     for k, v in r["images"].items():
         print(f"{'本卦' if k == 'primary' else '之卦'}　{v}")
 
-    print("\n── 大象傳 ──")
+    print("\n── 大象传 ──")
     print(r["context"]["本卦"]["大象傳"])
 
     print("\n── 注家原文 ──")
@@ -340,13 +340,13 @@ def _print_human(r: dict) -> None:
                 )
             else:
                 print(f"{e['hexagram']}　{c['slug']}：數據缺失，請重跑 fetch_commentary.py")
-    print("全文用 --json 取；引用前過 verify_quote.py。")
+    print("全文用 --json 取；引用前过 verify_quote.py。")
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="起卦並按考變占斷之")
-    ap.add_argument("--values", help="重放：六個 6/7/8/9，自下而上，逗號分隔")
-    ap.add_argument("--json", action="store_true", help="輸出完整 JSON（含注家原文全文）")
+    ap = argparse.ArgumentParser(description="起卦并按考变占断之")
+    ap.add_argument("--values", help="重放：六个 6/7/8/9，自下而上，逗号分隔")
+    ap.add_argument("--json", action="store_true", help="输出完整 JSON（含注家原文全文）")
     args = ap.parse_args()
 
     values = [int(v) for v in args.values.split(",")] if args.values else None

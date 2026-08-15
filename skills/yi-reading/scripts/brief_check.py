@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""數一數簡讀有沒有超過 200 字。
+"""数一数简读有没有超过 200 字。
 
-為什麼要有這個腳本：**「簡明扼要」是一句沒有判據的話**。
-寫的人每一句都覺得刪不得，於是二百字的東西寫成六百字，而且自己看不出來——
-和這個倉庫裏其他幾條規矩一樣，靠自覺守不住的規矩就得有機器來數。
+为什么要有这个脚本：**「简明扼要」是一句没有判据的话**。
+写的人每一句都觉得删不得，于是二百字的东西写成六百字，而且自己看不出来——
+和这个仓库里其他几条规矩一样，靠自觉守不住的规矩就得有机器来数。
 
-計數規則：**去掉空白與 Markdown 標記後的字符數**。
-標點算在內（中文標點本來就佔位），連續的拉丁字母數字算一個詞、記一個字符
-（否則一個 `verify_quote.py` 就吃掉十五個額度，不合理）。
+计数规则：**去掉空白与 Markdown 标记后的字符数**。
+标点算在内（中文标点本来就占位），连续的拉丁字母数字算一个词、记一个字符
+（否则一个 `verify_quote.py` 就吃掉十五个额度，不合理）。
 
 用法：
-    python3 brief_check.py "……簡讀正文……"
+    python3 brief_check.py "……简读正文……"
     cat draft.md | python3 brief_check.py
     python3 brief_check.py --limit 200 draft.md
 """
@@ -24,28 +24,28 @@ from pathlib import Path
 
 DEFAULT_LIMIT = 200
 
-# Markdown 的裝飾字符不是內容，不佔額度
+# Markdown 的装饰字符不是内容，不占额度
 MARKUP = re.compile(r"[*_`#>|\-\[\]()\\]")
 WHITESPACE = re.compile(r"\s+")
-# 連續的拉丁字母／數字／點記為一個字符
+# 连续的拉丁字母／数字／点记为一个字符
 LATIN_RUN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._/:%+-]*")
 
-# 一段連續的拉丁串（GPT-5.6、verify_quote.py）壓成這個佔位符，只記一個字。
-# 用一個顯式常量而不是把控制字符直接寫進 sub()——寫進去在編輯器裏是看不見的，
-# 讀代碼的人會以為那裏是空字符串，然後照着錯的理解去改。
+# 一段连续的拉丁串（GPT-5.6、verify_quote.py）压成这个占位符，只记一个字。
+# 用一个显式常量而不是把控制字符直接写进 sub()——写进去在编辑器里是看不见的，
+# 读代码的人会以为那里是空字符串，然后照着错的理解去改。
 PLACEHOLDER = "\u0001"
 
 
 def count(text: str) -> int:
     t = MARKUP.sub("", text)
-    t = LATIN_RUN.sub(PLACEHOLDER, t)  # 每段拉丁串記一個字
+    t = LATIN_RUN.sub(PLACEHOLDER, t)  # 每段拉丁串记一个字
     t = WHITESPACE.sub("", t)
     return len(t)
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="簡讀字數檢查")
-    ap.add_argument("text", nargs="?", help="簡讀正文，或一個文件路徑；省略則讀 stdin")
+    ap = argparse.ArgumentParser(description="简读字数检查")
+    ap.add_argument("text", nargs="?", help="简读正文，或一个文件路径；省略则读 stdin")
     ap.add_argument("--limit", type=int, default=DEFAULT_LIMIT, help=f"上限，默認 {DEFAULT_LIMIT}")
     args = ap.parse_args()
 
@@ -58,10 +58,10 @@ def main() -> int:
 
     n = count(text)
     if n <= args.limit:
-        print(f"✓ {n} 字，在 {args.limit} 字以內")
+        print(f"✓ {n} 字，在 {args.limit} 字以内")
         return 0
     print(
-        f"✗ {n} 字，超出 {n - args.limit} 字。簡讀就該是簡讀——"
+        f"✗ {n} 字，超出 {n - args.limit} 字。简读就该是简读——"
         f"砍掉的通常是第二個比喻和那句「也就是說」。",
         file=sys.stderr,
     )
