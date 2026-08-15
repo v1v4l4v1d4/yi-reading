@@ -19,7 +19,8 @@ npx skills add v1v4l4v1d4/yi-reading --skill yi-reading
 3. **金錢卦**起卦：三枚硬幣擲六次，每一擲都報給你看
 4. 發卦象圖（本卦；有動爻則連之卦一起）
 5. 按朱熹《易學啟蒙·考變占》定該讀哪一句，**並告訴你為什麼是這一句**
-6. 解讀：先一小段說清這卦是什麼、前人怎麼看，然後**大部分篇幅落到你問的那件事上**
+6. 解讀：**默認出簡讀**——白話，200 字以內，一句說清這卦是什麼，兩三句落到你的處境。
+   問過你要不要展開，才出精讀（引原文、講注家、逐條落到細節）。偏好記下來，以後不再重問
 
 ```
 $ python3 skills/yi-reading/scripts/reading.py --values 9,8,8,6,7,8
@@ -56,7 +57,7 @@ $ python3 skills/yi-reading/scripts/reading.py --values 9,8,8,6,7,8
 ## 開發
 
 ```bash
-python3 -m unittest discover -s tests -v      # 48 個測試，零依賴
+python3 -m unittest discover -s tests -v      # 62 個測試，零依賴
 ```
 
 構建期腳本（改數據或改風格時才跑）：
